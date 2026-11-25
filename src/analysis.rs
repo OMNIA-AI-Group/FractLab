@@ -129,6 +129,37 @@ pub struct EmfCurve {
     pub kv_estime: f64,
     /// Écart relatif entre les crêtes des trois phases [%].
     pub unbalance_pct: f64,
+    /// Écart maximal entre les crêtes de FEM pôle par pôle (phase A, un tour
+    /// mécanique) et leur moyenne [%] : la symétrie que supposent les
+    /// commandes standard.
+    #[serde(default)]
+    pub pole_dev_pct: f64,
+}
+
+/// Écart maximal des crêtes pôle par pôle d'une FEM de phase sur un tour [%] :
+/// une crête par alternance (entre deux passages par zéro) ; les alternances
+/// parasites (crête < 20 % de la plus grande) sont ignorées.
+pub fn pole_deviation_pct(e: &[f64]) -> f64 {
+    let n = e.len();
+    let Some(start) = (0..n).find(|&k| e[k] != 0.0 && (e[k] > 0.0) != (e[(k + n - 1) % n] > 0.0)) else { return 0.0 };
+    let mut peaks = Vec::new();
+    let mut pk = 0.0f64;
+    for j in 0..n {
+        let k = (start + j) % n;
+        if j > 0 && (e[k] > 0.0) != (e[(k + n - 1) % n] > 0.0) {
+            peaks.push(pk);
+            pk = 0.0;
+        }
+        pk = pk.max(e[k].abs());
+    }
+    peaks.push(pk);
+    let top = peaks.iter().cloned().fold(0.0, f64::max);
+    let peaks: Vec<f64> = peaks.into_iter().filter(|&p| p >= 0.2 * top).collect();
+    if peaks.len() < 2 || top <= 0.0 {
+        return 0.0;
+    }
+    let mean = peaks.iter().sum::<f64>() / peaks.len() as f64;
+    peaks.iter().map(|p| (p - mean).abs()).fold(0.0, f64::max) / mean * 100.0
 }
 
 /// FEM à vide sur un tour mécanique complet (n positions).
@@ -169,6 +200,7 @@ pub fn emf(model: &Model, n: usize) -> EmfCurve {
     let ll: Vec<f64> = (0..n).map(|t| emf[0][t] - emf[1][t]).collect();
     let ll_pk = ll.iter().fold(0.0f64, |m, v| m.max(v.abs()));
     let ke = ll_pk / (spec.rpm / 1000.0);
+    let pole_dev_pct = pole_deviation_pct(&emf[0]);
     EmfCurve {
         angles_deg: angles,
         flux,
@@ -180,6 +212,7 @@ pub fn emf(model: &Model, n: usize) -> EmfCurve {
         ke_ll_v_per_krpm: ke,
         kv_estime: if ke > 0.0 { 1000.0 / ke } else { 0.0 },
         unbalance_pct: if pk > 0.0 { 100.0 * (pk - pmin) / pk } else { 0.0 },
+        pole_dev_pct,
         spectrum_a: sp,
     }
 }
@@ -454,6 +487,9 @@ pub struct Report {
     pub winding: String,
     /// écart libre minimal entre aimants voisins [°] (négatif = chevauchement)
     pub min_magnet_gap_deg: f64,
+    /// Écart de FEM pôle par pôle [%].
+    #[serde(default)]
+    pub pole_dev_pct: f64,
 }
 
 /// Assemble le rapport à partir de courbes déjà calculées.
@@ -470,6 +506,7 @@ pub fn report_from(spec: &MotorSpec, cg: &CoggingCurve, em: &EmfCurve, fc: &Forc
         kv_estime: em.kv_estime,
         winding: winding::notation(&em.coils),
         min_magnet_gap_deg: geometry::magnet_gaps_deg(spec).into_iter().fold(f64::MAX, f64::min),
+        pole_dev_pct: em.pole_dev_pct,
     }
 }
 
@@ -617,7 +654,22 @@ pub fn current_law(model: &Model, em: &EmfCurve) -> impl Fn(f64, f64) -> [f64; 3
         im.atan2(re)
     };
     let phi = [phase_of(&em.emf[0]), phase_of(&em.emf[1]), phase_of(&em.emf[2])];
-    move |th: f64, gamma: f64| -> [f64; 3] { core::array::from_fn(|k| i0 * (p * th - phi[k] + gamma).cos()) }
+    let trap = s.load.commutation == crate::geometry::Commutation::Trapeze;
+    move |th: f64, gamma: f64| -> [f64; 3] {
+        core::array::from_fn(|k| {
+            let c = (p * th - phi[k] + gamma).cos();
+            if !trap {
+                i0 * c
+            } else if c > 0.5 {
+                // créneau de 120° centré sur la crête de FEM (six pas)
+                i0
+            } else if c < -0.5 {
+                -i0
+            } else {
+                0.0
+            }
+        })
+    }
 }
 
 /// Couple moyen [N·m] et ondulation crête-à-crête [%] en charge, version
@@ -736,7 +788,8 @@ pub fn load(model: &Model, em: &EmfCurve, cog: &CoggingCurve, n: usize) -> LoadC
         ls: lm[0][0] - lm[0][1] + end_winding_inductance(model),
         l_end: end_winding_inductance(model),
         r_phase: r,
-        p_joule: 1.5 * r * i0 * i0,
+        // créneaux 120° : I_eff² = 2/3·I² par phase → 3·R·(2/3)·I² = 2·R·I²
+        p_joule: if s.load.commutation == crate::geometry::Commutation::Trapeze { 2.0 * r * i0 * i0 } else { 1.5 * r * i0 * i0 },
         p_mech: avg * w,
     }
 }
@@ -762,6 +815,27 @@ mod tests_charge {
         let best = l.angle_sweep.iter().fold((0.0, f64::MIN), |b, v| if v[1] > b.1 { (v[0], v[1]) } else { b });
         assert!(best.0.abs() <= 15.0, "angle optimal {}", best.0);
         assert!(l.ls > 0.0 && l.r_phase > 0.0);
+    }
+
+    /// Commutation trapézoïdale : même ordre de couple moyen qu'en sinus
+    /// (créneau 120° de même crête : rapport théorique ≈ 1,10 pour une FEM
+    /// sinusoïdale) mais une ondulation nettement plus forte ; FEM d'un rotor
+    /// régulier : crêtes pôle par pôle égales.
+    #[test]
+    fn commutation_trapezoidale() {
+        let mut s = MotorSpec::default();
+        let m = Model::new(&s, Resolution { nh: 200, nk: 12 }).unwrap();
+        let em = emf(&m, 360);
+        assert!(em.pole_dev_pct < 1.0, "écart pôles {}", em.pole_dev_pct);
+        let (t_sin, r_sin) = ripple_quick(&m, &em, 72);
+        s.load.commutation = crate::geometry::Commutation::Trapeze;
+        let m2 = Model::new(&s, Resolution { nh: 200, nk: 12 }).unwrap();
+        let (t_tr, r_tr) = ripple_quick(&m2, &em, 72);
+        assert!(t_tr > 0.9 * t_sin && t_tr < 1.3 * t_sin, "couple trapèze {t_tr} vs sinus {t_sin}");
+        assert!(r_tr > r_sin + 5.0, "ondulation trapèze {r_tr} vs sinus {r_sin}");
+        let tri: Vec<f64> = (0..360).map(|k| ((k as f64).to_radians() * 7.0).sin() * if k < 180 { 1.0 } else { 1.1 }).collect();
+        let d = pole_deviation_pct(&tri);
+        assert!((d - 4.76).abs() < 0.5, "écart {d}");
     }
 }
 

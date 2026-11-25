@@ -215,6 +215,38 @@ impl App {
             lbl(ui, t("Aucune comparaison calculée."));
             return;
         }
+        if let Some(d) = crate::repartition::decision(&self.cmp) {
+            let col = if d.verdict.starts_with("NO") { Color32::from_rgb(200, 60, 60) } else if d.verdict == "GO" { Color32::from_rgb(40, 160, 80) } else { Color32::from_rgb(210, 140, 20) };
+            egui::CollapsingHeader::new(RichText::new(format!("⚖ {} — {}", d.title, d.verdict)).strong().color(col)).id_source("decision_rapport").default_open(true).show(ui, |ui| {
+                egui::ScrollArea::horizontal().id_source("dec_scroll").show(ui, |ui| {
+                    egui::Grid::new("dec_grid").striped(true).num_columns(4).spacing([14.0, 3.0]).show(ui, |ui| {
+                        for (name, v, thr, ok) in &d.lines {
+                            match ok {
+                                Some(true) => ui.label(RichText::new("✔").color(Color32::from_rgb(40, 160, 80))),
+                                Some(false) => ui.label(RichText::new("✖").color(Color32::from_rgb(200, 60, 60))),
+                                None => ui.label("—"),
+                            };
+                            ui.label(name);
+                            ui.label(RichText::new(v).monospace());
+                            ui.label(RichText::new(thr).weak());
+                            ui.end_row();
+                        }
+                    });
+                });
+                ui.label(RichText::new(&d.conclusion).strong());
+                ui.horizontal(|ui| {
+                    if ui.button(format!("📋 {}", t("Copier le rapport"))).clicked() {
+                        let mut txt = format!("{} {} — {}\n{}\n\n", crate::repartition::app_name(), env!("CARGO_PKG_VERSION"), self.spec.name, d.title);
+                        for (name, v, thr, ok) in &d.lines {
+                            txt += &format!("{name} : {v} (seuil {thr}) {}\n", match ok { Some(true) => "OK", Some(false) => "ÉCHEC", None => "—" });
+                        }
+                        txt += &format!("\nVerdict : {}\n{}\n", d.verdict, d.conclusion);
+                        ui.output_mut(|o| o.copied_text = txt);
+                    }
+                    ui.label(RichText::new(t("mêmes dimensions ; couple et ondulation au courant crête du projet, en sinus et en trapézoïdal")).weak());
+                });
+            });
+        }
         let ft = u.factor(Q::Torque);
         let series: Vec<(String, Vec<[f64; 2]>, Color32)> = self
             .cmp
@@ -243,9 +275,9 @@ impl App {
                 .x_axis_formatter(move |m, _, _| names.get(m.value.round() as usize).cloned().unwrap_or_default())
                 .show(&mut c[0], |p| p.bar_chart(BarChart::new(bars).element_formatter(Box::new(move |b, _| format!("{} : {:.4} {sym}", b.name, b.value)))));
             egui::ScrollArea::both().id_source("cmp_tab").show(&mut c[1], |ui| {
-                egui::Grid::new("cmp_grid").striped(true).num_columns(8).spacing([12.0, 4.0]).show(ui, |ui| {
+                egui::Grid::new("cmp_grid").striped(true).num_columns(12).spacing([12.0, 4.0]).show(ui, |ui| {
                     let vs_ref = format!("{} {}", t("vs"), crate::repartition::reference_name());
-                    for h in [t("Variante"), t("Cogging pp"), vs_ref.as_str(), t("Part dom."), t("Entropie"), t("Force max"), "THD", t("Autocorr.")] {
+                    for h in [t("Variante"), t("Cogging pp"), vs_ref.as_str(), t("Part dom."), t("Pic tonal"), t("Entropie"), t("Force max"), "THD", t("Écart pôles"), t("Ondul. sinus"), t("Ondul. trapèze"), t("Autocorr.")] {
                         ui.label(RichText::new(h).strong());
                     }
                     ui.end_row();
@@ -261,9 +293,16 @@ impl App {
                             None => ui.label("—"),
                         };
                         ui.label(format!("{:.1} %", r.cogging.dominant_share_pct));
+                        // raie dominante / reste du spectre (robuste : sans plancher numérique)
+                        let sh = r.cogging.dominant_share_pct.clamp(1e-9, 100.0 - 1e-9);
+                        ui.label(format!("{:.1} dB", 10.0 * (sh / (100.0 - sh)).log10()));
                         ui.label(format!("{:.3}", r.cogging.spectral_entropy));
                         ui.label(RichText::new(format!("{} {}", fnum(u.show(Q::Force, r.force_max_n)), u.sym(Q::Force))).color(badge(r.force_max_n < 0.5)));
                         ui.label(RichText::new(format!("{:.2} %", r.emf_thd_pct)).color(badge(r.emf_thd_pct <= 5.0)));
+                        ui.label(RichText::new(format!("{:.2} %", r.pole_dev_pct)).color(badge(r.pole_dev_pct < 3.0)));
+                        let dr = &v.drive;
+                        ui.label(if dr.torque_sin != 0.0 { format!("{:.1} %", dr.ripple_sin) } else { "—".into() });
+                        ui.label(if dr.torque_trap != 0.0 { format!("{:.1} %", dr.ripple_trap) } else { "—".into() });
                         ui.label(r.autocorr_max.map(|a| format!("{a:.3}")).unwrap_or("—".into()));
                         ui.end_row();
                     }

@@ -74,7 +74,17 @@ pub struct CoilDef {
     pub ret_side: u8,
 }
 
-/// Conditions de charge (courants sinusoïdaux équilibrés).
+/// Forme des courants de phase imposée par la commande.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, Serialize, Deserialize)]
+pub enum Commutation {
+    /// Courants sinusoïdaux (commande vectorielle, FOC).
+    #[default]
+    Sinus,
+    /// Créneaux à 120° (commutation trapézoïdale à six pas, ESC de drone).
+    Trapeze,
+}
+
+/// Conditions de charge (courants équilibrés, sinusoïdaux ou en créneaux).
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(default)]
 pub struct LoadSpec {
@@ -89,11 +99,13 @@ pub struct LoadSpec {
     /// Coefficient de perméance des têtes de bobines λ (0 = têtes ignorées,
     /// comme SIMUMSAP ; 0,3 à 0,5 usuel pour des bobines sur dent).
     pub end_lambda: f64,
+    /// Forme des courants (sinusoïdale ou trapézoïdale 120°).
+    pub commutation: Commutation,
 }
 
 impl Default for LoadSpec {
     fn default() -> Self {
-        LoadSpec { i_peak: 10.0, angle_deg: 0.0, parallel_paths: 1.0, fill_factor: 0.45, end_lambda: 0.3 }
+        LoadSpec { i_peak: 10.0, angle_deg: 0.0, parallel_paths: 1.0, fill_factor: 0.45, end_lambda: 0.3, commutation: Commutation::Sinus }
     }
 }
 

@@ -509,25 +509,25 @@ Allgemeine Wicklung und Last:
         icon: "⚙",
         title: ["Fonctionnement en charge", "On-load operation", "Funcionamiento en carga", "Lastbetrieb"],
         body: [
-"L'onglet Charge alimente le bobinage par des courants sinusoïdaux équilibrés, alignés sur la FEM (angle réglable).
+"L'onglet Charge alimente le bobinage par des courants équilibrés alignés sur la FEM (angle réglable) : sinusoïdaux (commande vectorielle) ou en créneaux de 120° (commutation trapézoïdale d'un ESC de drone), au choix dans « Bobinage général et charge ». L'onglet Comparaison donne l'ondulation des variantes sous les deux commandes et l'écart de FEM pôle par pôle (symétrie que supposent les commandes standard).
 • Couple en charge (tenseur de Maxwell) et contrôle énergétique Σ i·dλ/dθ + couple de détente : les deux courbes doivent se superposer.
 • Couple moyen, ondulation, constante de couple Kt, puissance mécanique, couple moyen en fonction de l'angle du courant.
 • Matrice d'inductances (hors têtes de bobines), inductance synchrone, résistance de phase estimée, pertes Joule et rendement estimé.
 • Têtes de bobines : leur inductance de fuite est ajoutée à l'inductance synchrone (coefficient de perméance λ réglable dans « Bobinage général et charge » ; λ = 0 les ignore, comme SIMUMSAP).
 • Saturation magnétique : inductions dans les dents, la culasse du stator et la culasse du rotor (vert sous le coude, orange au-dessus, rouge en saturation forte), FEM et couple corrigés, courbe couple / courant linéaire et saturée jusqu'à 3 fois le courant nominal.",
-"The Load tab feeds the winding with balanced sinusoidal currents aligned with the back-EMF (adjustable angle).
+"The Load tab feeds the winding with balanced currents aligned with the back-EMF (adjustable angle): sinusoidal (field-oriented control) or 120° blocks (trapezoidal commutation of a drone ESC), selectable in “General winding and load”. The Comparison tab gives the ripple of each variant under both drives and the pole-to-pole back-EMF spread (the symmetry standard drives assume).
 • On-load torque (Maxwell stress tensor) and energy check Σ i·dλ/dθ + cogging torque: both curves must coincide.
 • Mean torque, ripple, torque constant Kt, mechanical power, mean torque versus current angle.
 • Inductance matrix (end windings excluded), synchronous inductance, estimated phase resistance, copper losses and estimated efficiency.
 • End windings: their leakage inductance is added to the synchronous inductance (permeance coefficient λ adjustable in “General winding and load”; λ = 0 ignores them, as SIMUMSAP does).
 • Magnetic saturation: flux densities in the teeth, stator yoke and rotor yoke (green below the knee, orange above, red when strongly saturated), corrected back-EMF and torque, linear and saturated torque / current curve up to 3 times the rated current.",
-"La pestaña Carga alimenta el devanado con corrientes sinusoidales equilibradas, alineadas con la FCEM (ángulo ajustable).
+"La pestaña Carga alimenta el devanado con corrientes equilibradas alineadas con la FCEM (ángulo ajustable): sinusoidales (control vectorial) o en bloques de 120° (conmutación trapezoidal de un ESC de dron), a elegir en «Devanado general y carga». La pestaña Comparación da el rizado de cada variante con ambos mandos y la desviación de FCEM polo a polo (simetría que suponen los mandos estándar).
 • Par en carga (tensor de Maxwell) y control energético Σ i·dλ/dθ + par de cogging: ambas curvas deben coincidir.
 • Par medio, rizado, constante de par Kt, potencia mecánica, par medio en función del ángulo de la corriente.
 • Matriz de inductancias (sin cabezas de bobina), inductancia síncrona, resistencia de fase estimada, pérdidas Joule y rendimiento estimado.
 • Cabezas de bobina: su inductancia de fuga se suma a la inductancia síncrona (coeficiente de permeancia λ ajustable en «Devanado general y carga»; λ = 0 las ignora, como SIMUMSAP).
 • Saturación magnética: inducciones en los dientes, el yugo del estátor y el yugo del rotor (verde bajo el codo, naranja por encima, rojo en saturación fuerte), FCEM y par corregidos, curva par / corriente lineal y saturada hasta 3 veces la corriente nominal.",
-"Der Reiter Last speist die Wicklung mit symmetrischen Sinusströmen, an der EMK ausgerichtet (Winkel einstellbar).
+"Der Reiter Last speist die Wicklung mit symmetrischen, an der EMK ausgerichteten Strömen (Winkel einstellbar): sinusförmig (feldorientierte Regelung) oder 120°-Blöcke (Trapezkommutierung eines Drohnen-ESC), wählbar unter „Allgemeine Wicklung und Last“. Der Reiter Vergleich zeigt die Welligkeit jeder Variante unter beiden Ansteuerungen und die EMK-Abweichung von Pol zu Pol (die Symmetrie, die Standardansteuerungen voraussetzen).
 • Lastmoment (Maxwell-Spannungstensor) und Energieprüfung Σ i·dλ/dθ + Rastmoment: beide Kurven müssen übereinanderliegen.
 • Mittleres Moment, Welligkeit, Momentkonstante Kt, mechanische Leistung, mittleres Moment über dem Stromwinkel.
 • Induktivitätsmatrix (ohne Wickelköpfe), Synchroninduktivität, geschätzter Phasenwiderstand, Kupferverluste und geschätzter Wirkungsgrad.

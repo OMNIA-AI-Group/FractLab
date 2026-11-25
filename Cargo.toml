@@ -1,6 +1,6 @@
 [package]
 name = "fractlab"
-version = "0.1.11"
+version = "0.1.12"
 edition = "2024"
 description = "FractLab — simulateur analytique de moteurs à aimants permanents, pour toute répartition des aimants"
 authors = ["Alain VALETTE-CLARY (ΩiA-Group)"]

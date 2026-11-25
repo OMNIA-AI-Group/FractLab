@@ -13,7 +13,7 @@ impl App {
             set_panel_right(ui.max_rect().right());
             ui.add_space(4.0);
             ui.horizontal(|ui| {
-                if ui.add(egui::Label::new(RichText::new("FractLab").heading().color(CYAN).strong()).sense(egui::Sense::click())).on_hover_text(tr("Licence")).on_hover_cursor(egui::CursorIcon::PointingHand).clicked() {
+                if ui.add(egui::Label::new(RichText::new(crate::repartition::app_name()).heading().color(CYAN).strong()).sense(egui::Sense::click())).on_hover_text(tr("Licence")).on_hover_cursor(egui::CursorIcon::PointingHand).clicked() {
                     self.show_license = true;
                 }
                 if ui.add(egui::Label::new(RichText::new("Φ").color(ORANGE).size(22.0).strong()).sense(egui::Sense::click())).on_hover_text(tr("Développeur de l'application")).on_hover_cursor(egui::CursorIcon::PointingHand).clicked() {
@@ -391,6 +391,17 @@ impl App {
             egui::Grid::new("g_load").num_columns(2).spacing([10.0, 6.0]).show(ui, |ui| {
                 lbl(ui, t("Courant de phase crête"));
                 ch |= ui.add(egui::DragValue::new(&mut self.spec.load.i_peak).clamp_range(0.0..=1e5).speed(0.1).suffix(" A")).changed();
+                ui.end_row();
+                lbl(ui, t("Commutation"));
+                {
+                    use crate::geometry::Commutation as Cm;
+                    let name = |c: Cm| if c == Cm::Sinus { t("sinusoïdale (FOC)") } else { t("trapézoïdale 120° (ESC)") };
+                    egui::ComboBox::from_id_source("commut").selected_text(name(self.spec.load.commutation)).show_ui(ui, |ui| {
+                        for c in [Cm::Sinus, Cm::Trapeze] {
+                            ch |= ui.selectable_value(&mut self.spec.load.commutation, c, name(c)).changed();
+                        }
+                    });
+                }
                 ui.end_row();
                 lbl(ui, t("Angle du courant / FEM"));
                 ch |= ui.add(egui::DragValue::new(&mut self.spec.load.angle_deg).clamp_range(-180.0..=180.0).speed(0.5).suffix(" °él")).changed();

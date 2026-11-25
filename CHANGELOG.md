@@ -3,6 +3,17 @@
 Format : une section par version, la plus récente en premier.
 *English summary at the end of each section.*
 
+## 0.1.12 — commande trapézoïdale et symétrie pôle à pôle (en préparation)
+
+- Charge : commutation au choix, sinusoïdale (FOC) ou trapézoïdale 120°
+  (ESC de drone) ; pertes Joule correspondantes.
+- FEM : écart des crêtes pôle par pôle (symétrie que supposent les commandes).
+- Comparaison des variantes : ondulation sous les deux commandes, écart
+  pôles, pic tonal robuste (raie dominante / reste du spectre).
+
+*English — Trapezoidal 120° commutation option, pole-to-pole back-EMF spread,
+variant comparison under both drives.*
+
 ## 0.1.11 — confort visuel : comparaison à la demande, arbre de l'I.A, thème clair
 
 - La comparaison des solutions ne s'ouvre plus d'elle-même : bouton orange

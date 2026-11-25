@@ -60,6 +60,22 @@ pub struct VariantResult {
     pub cog: CoggingCurve,
     /// Rapport de synthèse.
     pub report: Report,
+    /// Fonctionnement en charge selon la commande.
+    #[serde(default)]
+    pub drive: VariantDrive,
+}
+
+/// Couple moyen et ondulation d'une variante selon la commande.
+#[derive(Clone, Copy, Debug, Default, serde::Serialize, serde::Deserialize)]
+pub struct VariantDrive {
+    /// Couple moyen en courants sinusoïdaux [N·m].
+    pub torque_sin: f64,
+    /// Ondulation crête-à-crête en courants sinusoïdaux [%].
+    pub ripple_sin: f64,
+    /// Couple moyen en commutation trapézoïdale 120° [N·m].
+    pub torque_trap: f64,
+    /// Ondulation crête-à-crête en commutation trapézoïdale [%].
+    pub ripple_trap: f64,
 }
 
 /// Messages renvoyés par les tâches de fond.
@@ -322,7 +338,20 @@ pub fn execute(req: Request, send: &mut dyn FnMut(Msg)) {
                 let emf = analysis::emf(&m, st.n_emf.min(360));
                 let f = analysis::forces(&m, 360.0, 180);
                 let report = analysis::report_from(&s, &cog, &emf, &f);
-                Some(VariantResult { name: s.name.clone(), cog, report })
+                // en charge, sous les deux commandes (même crête de courant)
+                let mut drive = VariantDrive::default();
+                for trap in [false, true] {
+                    let mut sc = s.clone();
+                    sc.load.commutation = if trap { crate::geometry::Commutation::Trapeze } else { crate::geometry::Commutation::Sinus };
+                    let Ok(mc) = Model::new(&sc, st.res) else { continue };
+                    let (t, r) = analysis::ripple_quick(&mc, &emf, 72);
+                    if trap {
+                        (drive.torque_trap, drive.ripple_trap) = (t, r);
+                    } else {
+                        (drive.torque_sin, drive.ripple_sin) = (t, r);
+                    }
+                }
+                Some(VariantResult { name: s.name.clone(), cog, report, drive })
             });
             send(Msg::Compare(out.into_iter().flatten().collect()));
         }

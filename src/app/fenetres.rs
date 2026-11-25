@@ -185,7 +185,7 @@ impl App {
                     ui.label(RichText::new("INPI DSO2025023838").monospace());
                     ui.hyperlink_to("🔗 LinkedIn", "https://www.linkedin.com/in/alain-valette-clary-524b28352/");
                     ui.add_space(4.0);
-                    ui.label(RichText::new(format!("FractLab — Magnetic Engine Simulator · {} {}", tr("version"), env!("CARGO_PKG_VERSION"))).weak());
+                    ui.label(RichText::new(format!("{} — Magnetic Engine Simulator · {} {}", crate::repartition::app_name(), tr("version"), env!("CARGO_PKG_VERSION"))).weak());
                     if ui.link(tr("Licence")).clicked() {
                         self.show_license = true;
                     }

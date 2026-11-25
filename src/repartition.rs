@@ -44,6 +44,44 @@ pub const CRITERES_PUBLICS: Criteria = Criteria {
     source: "critères généraux",
 };
 
+/// Une ligne du rapport de décision : (libellé, valeur, seuil, tenu ?).
+pub type DecisionLine = (String, String, String, Option<bool>);
+
+/// Rapport de décision d'une comparaison de répartitions (règles fournies
+/// par le module privé facultatif) : lignes de critères et conclusion.
+#[derive(Clone, Debug, Default)]
+pub struct Decision {
+    /// Titre du rapport.
+    pub title: String,
+    /// Critères évalués.
+    pub lines: Vec<DecisionLine>,
+    /// Branche de l'arbre retenue et conséquence.
+    pub conclusion: String,
+    /// Verdict global (GO, GO conditionnel, NO-GO…).
+    pub verdict: String,
+}
+
+/// Décision tirée de la comparaison des répartitions (aucune sans module privé).
+pub fn decision(cmp: &[crate::compute::VariantResult]) -> Option<Decision> {
+    #[cfg(phi)]
+    let d = prive::decision(cmp);
+    #[cfg(not(phi))]
+    let d = {
+        let _ = cmp;
+        None
+    };
+    d
+}
+
+/// Nom de l'application (la version d'étude privée porte son propre nom).
+pub fn app_name() -> &'static str {
+    #[cfg(phi)]
+    let n = prive::NOM;
+    #[cfg(not(phi))]
+    let n = "FractLab";
+    n
+}
+
 /// Répartitions proposées dans le panneau de gauche.
 pub fn variants() -> Vec<&'static str> {
     #[cfg(phi)]

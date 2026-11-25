@@ -44,7 +44,7 @@ fn main() -> eframe::Result<()> {
         eframe::egui::IconData { width: i.width(), height: i.height(), rgba: i.into_raw() }
     });
     let mut vp = eframe::egui::ViewportBuilder::default()
-        .with_title("FractLab — Magnetic Engine Simulator")
+        .with_title(format!("{} — Magnetic Engine Simulator", fractlab::repartition::app_name()))
         .with_app_id("fractlab")
         .with_inner_size([1360.0, 820.0])
         .with_min_inner_size([900.0, 560.0])

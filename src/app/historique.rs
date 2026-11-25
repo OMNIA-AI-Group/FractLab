@@ -263,7 +263,7 @@ impl App {
                 self.undo(ctx);
             }
         }
-        let title = format!("FractLab — {}{}", self.spec.name, if self.modified() { " •" } else { "" });
+        let title = format!("{} — {}{}", crate::repartition::app_name(), self.spec.name, if self.modified() { " •" } else { "" });
         if title != self.hist.title {
             ctx.send_viewport_cmd(egui::ViewportCommand::Title(title.clone()));
             self.hist.title = title;
