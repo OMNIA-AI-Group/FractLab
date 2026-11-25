@@ -1007,6 +1007,21 @@ pub static TABLE: &[(&str, &str, &str, &str)] = &[
     ("Tous les graphiques", "All charts", "Todos los gráficos", "Alle Diagramme"),
     ("cliquer un titre pour agrandir", "click a title to enlarge", "haga clic en un título para ampliar", "Titel anklicken zum Vergrößern"),
     ("Agrandir", "Enlarge", "Ampliar", "Vergrößern"),
+    // édition et projets
+    ("Édition", "Edit", "Edición", "Bearbeiten"),
+    ("Annuler", "Undo", "Deshacer", "Rückgängig"),
+    ("Rétablir", "Redo", "Rehacer", "Wiederholen"),
+    ("Annulé", "Undone", "Deshecho", "Rückgängig gemacht"),
+    ("Rétabli", "Redone", "Rehecho", "Wiederhergestellt"),
+    ("Modifications depuis l'enregistrement", "Changes since last save", "Cambios desde el guardado", "Änderungen seit dem Speichern"),
+    ("Aucune modification : le projet est identique au fichier enregistré.", "No change: the project matches the saved file.", "Ningún cambio: el proyecto es idéntico al archivo guardado.", "Keine Änderung: Das Projekt entspricht der gespeicherten Datei."),
+    ("champ(s) modifié(s)", "field(s) changed", "campo(s) modificado(s)", "Feld(er) geändert"),
+    ("Enregistré", "Saved", "Guardado", "Gespeichert"),
+    ("Actuel", "Current", "Actual", "Aktuell"),
+    ("Projets récents", "Recent projects", "Proyectos recientes", "Zuletzt verwendete Projekte"),
+    ("Ouvert :", "Opened:", "Abierto:", "Geöffnet:"),
+    ("modifié", "modified", "modificado", "geändert"),
+    ("Projet modifié depuis l'enregistrement : cliquer pour voir les modifications", "Project modified since last save: click to see the changes", "Proyecto modificado desde el guardado: haga clic para ver los cambios", "Projekt seit dem Speichern geändert: klicken, um die Änderungen zu sehen"),
 ];
 
 #[cfg(test)]

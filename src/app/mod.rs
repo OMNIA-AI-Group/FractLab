@@ -26,6 +26,7 @@ mod demo;
 mod fenetres;
 mod fichiers;
 mod graphe_ia;
+mod historique;
 mod menu;
 mod onglets_etude;
 mod onglets_mesure;
@@ -75,11 +76,14 @@ pub struct Config {
     /// le champ 3D à travers le moteur a déjà été essayé (le badge « NOUVEAU » disparaît)
     #[serde(default)]
     pub seen_field3d: bool,
+    /// projets récents (chemins)
+    #[serde(default)]
+    pub recent: Vec<String>,
 }
 
 impl Default for Config {
     fn default() -> Self {
-        Config { lang: Lang::Fr, theme: Theme::Sombre, units: Units::default(), last_project: None, ui_scale: 0.0, seen_field3d: false }
+        Config { lang: Lang::Fr, theme: Theme::Sombre, units: Units::default(), last_project: None, ui_scale: 0.0, seen_field3d: false, recent: Vec::new() }
     }
 }
 
@@ -291,6 +295,8 @@ pub struct App {
     demo: demo::DemoState,
     /// comparaison des solutions de l'Ajustement I.A
     cmpia: comparaison_ia::CmpIa,
+    /// annuler / rétablir, projet modifié
+    hist: historique::EditHistory,
     /// fiche du projet SIMUMSAP ouvert (champs, inductances de référence, dossier)
     simu: Option<(Vec<(String, String)>, Option<Vec<Vec<f64>>>, std::path::PathBuf)>,
     /// figures MATLAB chargées : (fichier, axes)
@@ -538,6 +544,7 @@ impl App {
             opt_skew_min: if crate::repartition::uses_offsets() { 1.0 } else { 0.0 },
             console: Default::default(),
             cmpia: Default::default(),
+            hist: Default::default(),
             demo: demo::DemoState {
                 pending: std::env::var("FRACTLAB_DEMO").ok().and_then(|k| crate::demo::MOTORS.iter().find(|m| m.key == k).map(|m| m.key)),
                 confirm: std::env::var("FRACTLAB_DEMO").as_deref() == Ok("choix"),
@@ -641,6 +648,7 @@ impl App {
         if let Ok(v) = std::env::var("FRACTLAB_THETA") {
             app.theta_r = v.parse().unwrap_or(0.0);
         }
+        app.hist_reset();
         app.launch();
         app
     }
@@ -860,6 +868,7 @@ impl App {
     fn touched(&mut self, ctx: &egui::Context) {
         self.dirty = true;
         self.edit_time = ctx.input(|i| i.time);
+        self.hist_touch();
     }
 
 }
@@ -870,6 +879,7 @@ impl eframe::App for App {
             self.on_opened(purpose, files, ctx);
         }
         self.poll(ctx);
+        self.hist_tick(ctx);
         if self.animate {
             let dt = ctx.input(|i| i.stable_dt).min(0.05) as f64;
             self.theta_r = (self.theta_r + dt * 20.0).rem_euclid(360.0);
@@ -920,6 +930,7 @@ impl eframe::App for App {
         self.poll_script(ctx);
         self.demo_windows(ctx);
         self.cmpia_window(ctx);
+        self.changes_window(ctx);
         if self.console.open {
             self.console_window(ctx);
         }

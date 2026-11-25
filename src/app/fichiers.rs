@@ -5,15 +5,22 @@ use super::*;
 /// Zoom de l'interface selon la taille de l'écran en points logiques
 /// (pixels / mise à l'échelle du système), **hors zoom de l'application**.
 pub(super) fn zoom_for_screen(w: f32, h: f32) -> f32 {
-    if w < 1300.0 || h < 720.0 {
+    // la hauteur décide (un double écran très large n'est pas plus haut) ; la
+    // largeur ne fait que réduire sur un petit portable
+    let z: f32 = if h < 720.0 {
         0.8
-    } else if w < 1500.0 || h < 860.0 {
+    } else if h < 860.0 {
         0.9
-    } else if w > 2400.0 {
-        1.15
-    } else {
+    } else if h < 1250.0 {
         1.0
-    }
+    } else if h < 1500.0 {
+        1.2
+    } else if h < 1900.0 {
+        1.4
+    } else {
+        1.7
+    };
+    if w < 1300.0 { z.min(0.8) } else if w < 1500.0 { z.min(0.9) } else { z }
 }
 
 #[cfg(test)]
@@ -99,9 +106,10 @@ impl App {
                         Ok(s) => {
                             self.spec = s;
                             if !crate::platform::WEB {
-                                self.cfg.last_project = Some(name);
-                                self.cfg.save();
+                                self.cfg.last_project = Some(name.clone());
+                                self.push_recent(&name);
                             }
+                            self.hist_reset();
                             self.touched(ctx);
                         }
                         Err(_) => self.err = Some(self.t("Fichier de projet illisible").into()),

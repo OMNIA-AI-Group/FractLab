@@ -20,6 +20,21 @@ impl App {
                         ui.close_menu();
                         Pick::Project.ask("FractLab", &["json"]);
                     }
+                    if !crate::platform::WEB && !self.cfg.recent.is_empty() {
+                        ui.menu_button(format!("🕘 {}", self.t("Projets récents")), |ui| {
+                            let mut pick: Option<String> = None;
+                            for p in self.cfg.recent.clone() {
+                                let short = std::path::Path::new(&p).file_name().map(|f| f.to_string_lossy().to_string()).unwrap_or_else(|| p.clone());
+                                if ui.button(short).on_hover_text(&p).clicked() {
+                                    pick = Some(p);
+                                }
+                            }
+                            if let Some(p) = pick {
+                                ui.close_menu();
+                                self.open_recent(&p, ctx);
+                            }
+                        });
+                    }
                     if ui.button(format!("📂 {}", self.t("Ouvrir un projet SIMUMSAP (MATLAB)…"))).clicked() {
                         ui.close_menu();
                         Pick::Simumsap.ask("SIMUMSAP", &["txt"]);
@@ -37,6 +52,21 @@ impl App {
                         if ui.button(self.t("Quitter")).clicked() {
                             ctx.send_viewport_cmd(egui::ViewportCommand::Close);
                         }
+                    }
+                });
+                ui.menu_button(self.t("Édition"), |ui| {
+                    if ui.add_enabled(self.can_undo(), egui::Button::new(format!("⟲ {}", self.t("Annuler"))).shortcut_text("Ctrl+Z")).clicked() {
+                        self.undo(ctx);
+                        ui.close_menu();
+                    }
+                    if ui.add_enabled(self.can_redo(), egui::Button::new(format!("⟳ {}", self.t("Rétablir"))).shortcut_text("Ctrl+Y")).clicked() {
+                        self.redo(ctx);
+                        ui.close_menu();
+                    }
+                    ui.separator();
+                    if ui.button(format!("✎ {}…", self.t("Modifications depuis l'enregistrement"))).clicked() {
+                        self.hist.show_changes = true;
+                        ui.close_menu();
                     }
                 });
                 ui.menu_button(self.t("Calcul"), |ui| {
@@ -146,8 +176,9 @@ impl App {
             Some(Ok(p)) => {
                 if !crate::platform::WEB {
                     self.cfg.last_project = Some(p.clone());
-                    self.cfg.save();
+                    self.push_recent(&p);
                 }
+                self.hist_mark_saved();
                 self.status = format!("{} {}", self.t("Enregistré :"), p);
             }
             Some(Err(e)) => self.err = Some(e),

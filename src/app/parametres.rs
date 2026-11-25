@@ -18,7 +18,15 @@ impl App {
                     self.show_author = true;
                 }
             });
-            ui.label(RichText::new(self.t("Simulateur de machines à aimants permanents")).small().weak());
+            ui.horizontal_wrapped(|ui| {
+                ui.label(RichText::new(self.t("Simulateur de machines à aimants permanents")).small().weak());
+                if self.modified() {
+                    let r = ui.add(egui::Label::new(RichText::new(format!("● {}", self.t("modifié"))).small().color(ORANGE)).sense(egui::Sense::click()));
+                    if r.on_hover_text(self.t("Projet modifié depuis l'enregistrement : cliquer pour voir les modifications")).clicked() {
+                        self.hist.show_changes = true;
+                    }
+                }
+            });
             ui.separator();
             let mut changed = false;
             egui::ScrollArea::vertical().auto_shrink([false; 2]).show(ui, |ui| {
@@ -63,6 +71,12 @@ impl App {
                 .clicked()
             {
                 self.launch();
+            }
+            if ui.add_enabled(self.can_undo(), egui::Button::new("⟲")).on_hover_text(format!("{} (Ctrl+Z)", t("Annuler"))).clicked() {
+                self.undo(ui.ctx());
+            }
+            if ui.add_enabled(self.can_redo(), egui::Button::new("⟳")).on_hover_text(format!("{} (Ctrl+Y)", t("Rétablir"))).clicked() {
+                self.redo(ui.ctx());
             }
             chk(ui, &mut self.auto, t("auto"));
             if ui.button(format!("📝 {}", t("Rédaction"))).on_hover_text(t("Fiche du projet et document LaTeX / PDF")).clicked() {

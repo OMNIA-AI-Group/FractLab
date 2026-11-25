@@ -200,11 +200,13 @@ impl App {
                 None => 2,
             });
             let (card_tab, cards): (Vec<Tab>, Vec<_>) = cards.into_iter().unzip();
+            // largeur réellement visible (la zone défilante peut annoncer davantage)
+            let aw = (ui.available_width().min(ui.clip_rect().right() - ui.cursor().left()) - 24.0).max(160.0);
             // place insuffisante pour 3 colonnes de cartes complètes : vignettes compactes
-            let compact = ui.available_width() < 3.0 * 270.0;
+            let compact = aw < 3.0 * 270.0;
             let cw = if compact { 190.0 } else { 270.0 };
-            let ncol = (((ui.available_width() + 12.0) / cw).floor() as usize).clamp(1, 6);
-            let w = ((ui.available_width() - 12.0 * (ncol as f32 - 1.0)) / ncol as f32).max(150.0);
+            let ncol = (((aw + 12.0) / cw).floor() as usize).clamp(1, 6);
+            let w = ((aw - 12.0 * (ncol as f32 - 1.0)) / ncol as f32).max(150.0);
             egui::Grid::new("cards").num_columns(ncol).spacing([12.0, 12.0]).show(ui, |ui| {
                 for (i, (title, val, ok, tip)) in cards.iter().enumerate() {
                     if card(ui, w, title, val, *ok, tip, self.cfg.theme, compact).clicked() {
