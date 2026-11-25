@@ -150,6 +150,13 @@ fn col(k: usize) -> Color32 {
     if k == 0 { Color32::from_gray(200) } else { SERIES[(k - 1) % SERIES.len()] }
 }
 
+impl App {
+    /// Calcul des solutions en cours ?
+    pub(super) fn cmpia_busy(&self) -> bool {
+        self.cmpia.job.is_some()
+    }
+}
+
 impl CmpIa {
     /// Aucune comparaison affichée (ni calculée ni relue) ?
     pub(super) fn is_empty(&self) -> bool {
@@ -210,7 +217,7 @@ impl App {
         self.cmpia = c;
     }
 
-    fn cmpia_poll(&mut self, ctx: &egui::Context) {
+    pub(super) fn cmpia_poll(&mut self, ctx: &egui::Context) {
         let mut done = false;
         if let Some(j) = &self.cmpia.job {
             while let Ok(m) = j.rx.try_recv() {
@@ -315,15 +322,12 @@ impl App {
         s
     }
 
-    pub(super) fn cmpia_window(&mut self, ctx: &egui::Context) {
-        self.cmpia_poll(ctx);
-        if !self.cmpia.open {
-            return;
-        }
+    /// Onglet « Comparaison des solutions ».
+    pub(super) fn cmpia_tab(&mut self, ui: &mut egui::Ui) {
+        let ctx = &ui.ctx().clone();
         let lang = self.cfg.lang;
         let t = |k: &'static str| T(lang, k);
         let u = self.cfg.units.clone();
-        let mut open = true;
         let mut apply: Option<usize> = None;
         let mut export = false;
         let mut load_i: Option<usize> = None;
@@ -333,9 +337,7 @@ impl App {
         if self.cmpia.history.is_none() {
             self.cmpia.history = Some(load_history());
         }
-        let sr = ctx.screen_rect();
-        let size = [(sr.width() * 0.94).clamp(900.0, 3000.0), (sr.height() * 0.88).clamp(600.0, 1800.0)];
-        egui::Window::new(format!("⚖ {}", t("Comparaison des solutions"))).id(egui::Id::new(("cmpia_window", self.cmpia.ouverture))).open(&mut open).default_size(size).default_pos([sr.left() + sr.width() * 0.03, sr.top() + 30.0]).resizable(true).show(ctx, |ui| {
+        ui.scope(|ui| {
             let c = &mut self.cmpia;
             let n = c.specs.len();
             let ready = c.res.iter().filter(|r| r.is_some()).count();
@@ -398,14 +400,20 @@ impl App {
             }
             let dark = self.cfg.theme == Theme::Sombre;
             let avail = ui.available_size();
-            let left_w = (avail.x * 0.47).clamp(480.0, 1500.0);
+            // écran étroit (portable) : tableau au-dessus, graphiques en dessous
+            let narrow = avail.x < 1150.0;
+            let left_w = if narrow { avail.x } else { (avail.x * 0.47).clamp(480.0, 1500.0) };
+            let left_h = if narrow { (avail.y * 0.5).max(220.0) } else { avail.y };
+            let right_h = if narrow { (avail.y - left_h - 12.0).max(260.0) } else { avail.y };
             let tq = u.factor(Q::Torque);
             let ff = u.factor(Q::Force);
             let base: Vec<Option<f64>> = c.metrics.first().cloned().unwrap_or_default();
-            ui.horizontal_top(|ui| {
+            let dir = if narrow { egui::Layout::top_down(egui::Align::LEFT) } else { egui::Layout::left_to_right(egui::Align::TOP) };
+            ui.with_layout(dir, |ui| {
                 // ================= métriques (gauche) =================
-                ui.allocate_ui_with_layout(egui::vec2(left_w, avail.y), egui::Layout::top_down(egui::Align::LEFT), |ui| {
-                    ui.set_min_size(egui::vec2(left_w, avail.y));
+                ui.allocate_ui_with_layout(egui::vec2(left_w, left_h), egui::Layout::top_down(egui::Align::LEFT), |ui| {
+                    ui.set_min_size(egui::vec2(left_w, left_h));
+                    ui.set_max_height(left_h);
                     ui.label(RichText::new(format!("📊 {}", t("Métriques"))).strong().size(15.0));
                     egui::ScrollArea::both().id_source("cmpia_table").auto_shrink([false, false]).show(ui, |ui| {
                 // ---------------- tableau des métriques ----------------
@@ -515,8 +523,9 @@ impl App {
                 });
                 ui.separator();
                 // ================= graphiques (droite) =================
-                let rw = ui.available_width();
-                ui.allocate_ui_with_layout(egui::vec2(rw, avail.y), egui::Layout::top_down(egui::Align::LEFT), |ui| {
+                let rw = if narrow { avail.x } else { ui.available_width() };
+                ui.allocate_ui_with_layout(egui::vec2(rw, right_h), egui::Layout::top_down(egui::Align::LEFT), |ui| {
+                    ui.set_max_height(right_h);
                     let zoom = c.plot;
                     ui.horizontal(|ui| {
                         ui.label(RichText::new(format!("📈 {}", t("Graphiques"))).strong().size(15.0));
@@ -641,16 +650,24 @@ impl App {
                         None => {
                             // grille 2 × 3 : tous les graphiques visibles en même temps
                             let head = ui.text_style_height(&egui::TextStyle::Body) + 8.0;
-                            let h = ((ui.available_height() - 3.0 * head - 16.0) / 3.0).max(110.0);
-                            ui.columns(2, |cols| {
-                                for (i, (sel, title)) in PLOTS.iter().enumerate() {
-                                    let ui = &mut cols[i % 2];
-                                    if ui.add(egui::Label::new(RichText::new(format!("🔍 {}", t(title))).strong()).sense(egui::Sense::click())).on_hover_text(t("Agrandir")).clicked() {
-                                        clicked = Some(*sel);
+                            let mut grid = |ui: &mut egui::Ui, h: f32| {
+                                ui.columns(2, |cols| {
+                                    for (i, (sel, title)) in PLOTS.iter().enumerate() {
+                                        let ui = &mut cols[i % 2];
+                                        if ui.add(egui::Label::new(RichText::new(format!("🔍 {}", t(title))).strong()).sense(egui::Sense::click())).on_hover_text(t("Agrandir")).clicked() {
+                                            clicked = Some(*sel);
+                                        }
+                                        draw(ui, *sel, h, false);
                                     }
-                                    draw(ui, *sel, h, false);
-                                }
-                            });
+                                });
+                            };
+                            if narrow {
+                                // écran étroit : graphiques lisibles, la grille défile
+                                egui::ScrollArea::vertical().id_source("cmpia_graphs").auto_shrink([false, false]).max_height(ui.available_height()).show(ui, |ui| grid(ui, 170.0));
+                            } else {
+                                let h = ((ui.available_height() - 3.0 * head - 16.0) / 3.0).max(110.0);
+                                grid(ui, h);
+                            }
                         }
                     }
                     if let Some(p) = clicked {
@@ -695,9 +712,9 @@ impl App {
                 self.touched(ctx);
                 self.status = if k == 0 { t("Moteur original conservé").to_string() } else { format!("{} : {}", t("Solution appliquée"), self.cmpia.names[k]) };
             }
-            open = false;
+            // solution choisie : retour à la synthèse du projet
+            self.tab = Tab::Synthese;
         }
-        self.cmpia.open = open;
     }
 }
 

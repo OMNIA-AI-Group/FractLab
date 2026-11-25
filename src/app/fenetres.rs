@@ -355,14 +355,15 @@ impl App {
         }
     }
 
-    pub(super) fn opt_window(&mut self, ctx: &egui::Context) {
+    /// Onglet « Ajustement I.A ».
+    pub(super) fn opt_tab(&mut self, ui: &mut egui::Ui) {
+        let ctx = &ui.ctx().clone();
         use crate::optimize::{self as op, Goal};
         let lang = self.cfg.lang;
         let t = |k: &'static str| T(lang, k);
         let u = self.cfg.units.clone();
-        let mut open = self.show_opt;
         let mut apply: Option<usize> = None;
-        egui::Window::new(format!("✨ {}", t("Ajustement I.A"))).open(&mut open).default_size([760.0, 560.0]).resizable(true).show(ctx, |ui| {
+        egui::ScrollArea::vertical().id_source("opt_tab").auto_shrink([false, false]).show(ui, |ui| {
             ui.label(RichText::new(t("Recherche automatique des meilleurs réglages : chaque essai est un calcul complet du moteur. Les 5 meilleures solutions distinctes s'affichent en direct ; « Appliquer » les reporte dans le projet.")).weak());
             let running = self.opt_job.is_some();
             ui.add_enabled_ui(!running, |ui| {
@@ -515,7 +516,6 @@ impl App {
                 self.status = format!("{} #{}", t("Proposition appliquée"), k + 1);
             }
         }
-        self.show_opt = open;
     }
 
     pub(super) fn license_window(&mut self, ctx: &egui::Context) {

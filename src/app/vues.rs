@@ -7,18 +7,48 @@ impl App {
     // Onglets
     // ------------------------------------------------------------------
     pub(super) fn tabs(&mut self, ui: &mut egui::Ui) {
+        let dark = self.cfg.theme == Theme::Sombre;
+        let accent = if dark { CYAN } else { Color32::from_rgb(0, 110, 170) };
+        let pulse = pulse(ui);
+        // la comparaison des variantes n'a de sens qu'avec plusieurs répartitions proposées
+        let compare = crate::repartition::variants().len() > 1;
+        let visible = |t: Tab| t != Tab::Comparaison || compare;
+        let cur_step = STEPS.iter().position(|s| s.2.contains(&self.tab)).unwrap_or(0);
+        // ---- étapes de l'étude
         ui.horizontal_wrapped(|ui| {
-            let items = ALL_TABS;
-            let pulse = pulse(ui);
-            // la comparaison n'a de sens qu'avec plusieurs répartitions proposées
-            let compare = crate::repartition::variants().len() > 1;
-            for (tab, ic, k) in items {
-                if tab == Tab::Comparaison && !compare {
-                    continue;
+            for (k, (name, icon, tabs)) in STEPS.iter().enumerate() {
+                let sel = k == cur_step;
+                let fresh = tabs.iter().any(|t| self.fresh.contains(t) && *t != self.tab);
+                let txt = RichText::new(format!("{icon} {}", self.t(name))).size(15.5).strong();
+                let txt = if sel { txt.color(Color32::WHITE) } else { txt };
+                let mut b = egui::Button::new(txt).min_size(Vec2::new(0.0, 28.0));
+                if sel {
+                    b = b.fill(accent.gamma_multiply(0.55));
                 }
+                let r = ui.add(b);
+                if fresh {
+                    let c = r.rect.right_top() + Vec2::new(-5.0, 5.0);
+                    ui.painter().circle_filled(c, 3.5, ORANGE.gamma_multiply(0.5 + 0.5 * pulse));
+                }
+                if r.clicked() && !sel {
+                    // dernier onglet ouvert dans cette étape, sinon le premier
+                    let t = self.step_tab.get(k).copied().flatten().filter(|t| tabs.contains(t) && visible(*t)).or_else(|| tabs.iter().copied().find(|t| visible(*t)));
+                    if let Some(t) = t {
+                        self.tab = t;
+                    }
+                }
+                if k + 1 < STEPS.len() {
+                    ui.label(RichText::new("›").weak());
+                }
+            }
+        });
+        // ---- onglets de l'étape
+        ui.horizontal_wrapped(|ui| {
+            for tab in STEPS[cur_step].2.iter().copied().filter(|t| visible(*t)) {
+                let (_, ic, k) = ALL_TABS.iter().find(|x| x.0 == tab).copied().unwrap();
                 let sel = self.tab == tab;
                 let txt = RichText::new(format!("{ic} {}", self.t(k))).size(14.5);
-                let txt = if sel { txt.strong().color(if self.cfg.theme == Theme::Sombre { CYAN } else { Color32::from_rgb(0, 110, 170) }) } else { txt };
+                let txt = if sel { txt.strong().color(accent) } else { txt };
                 let r = with_tip(ui.selectable_label(sel, txt), self.t(k));
                 if tab == Tab::Moteur3d && !self.cfg.seen_field3d {
                     let c = r.rect.right_top() + Vec2::new(-4.0, 4.0);
@@ -27,13 +57,22 @@ impl App {
                 }
                 if self.fresh.contains(&tab) && !sel {
                     let c = r.rect.right_top() + Vec2::new(-5.0, 5.0);
-                    ui.painter().circle_filled(c, 3.5, ORANGE.gamma_multiply(0.35 + 0.65 * pulse));
+                    ui.painter().circle_filled(c, 3.0, ORANGE.gamma_multiply(0.75));
+                }
+                if (tab == Tab::Ia && self.opt_job.is_some()) || (tab == Tab::Solutions && self.cmpia_busy()) {
+                    let c = r.rect.right_top() + Vec2::new(-5.0, 5.0);
+                    ui.painter().circle_filled(c, 3.5, accent.gamma_multiply(0.4 + 0.6 * pulse));
                 }
                 if r.clicked() {
                     self.tab = tab;
                 }
             }
         });
+        if let Some(k) = STEPS.iter().position(|s| s.2.contains(&self.tab))
+            && let Some(slot) = self.step_tab.get_mut(k)
+        {
+            *slot = Some(self.tab);
+        }
         ui.separator();
     }
 
@@ -143,6 +182,9 @@ impl App {
                 Tab::Carte3d => self.tab_carte3d(ui),
                 Tab::Validation => self.tab_validation(ui),
                 Tab::Parametrique => self.tab_parametrique(ui),
+                Tab::Ia => self.opt_tab(ui),
+                Tab::Console => self.console_tab(ui),
+                Tab::Solutions => self.cmpia_tab(ui),
             }
         }
     }

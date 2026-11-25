@@ -7,7 +7,9 @@ impl App {
     // Panneau des paramètres (toutes les données modifiables)
     // ------------------------------------------------------------------
     pub(super) fn params_panel(&mut self, ctx: &egui::Context) {
-        egui::SidePanel::left("params").resizable(true).default_width(340.0).show(ctx, |ui| {
+        // largeur proportionnée à l'écran : jamais plus du tiers sur un portable
+        let sw = ctx.screen_rect().width();
+        egui::SidePanel::left("params").resizable(true).default_width((sw * 0.24).clamp(300.0, 560.0)).min_width(260.0).max_width((sw * 0.34).max(300.0)).show(ctx, |ui| {
             set_panel_right(ui.max_rect().right());
             ui.add_space(4.0);
             ui.horizontal(|ui| {
@@ -29,6 +31,20 @@ impl App {
             });
             ui.separator();
             let mut changed = false;
+            // recherche dans les paramètres : champs encadrés en jaune, sections dépliées
+            ui.horizontal(|ui| {
+                ui.label("🔍");
+                let hint = self.t("Rechercher un paramètre…").to_string();
+                let r = ui.add(egui::TextEdit::singleline(&mut self.param_search).hint_text(hint).desired_width(ui.available_width() - 70.0));
+                if !self.param_search.is_empty() {
+                    let n = search_hits();
+                    ui.label(RichText::new(format!("{n}")).color(if n > 0 { Color32::from_rgb(240, 200, 40) } else { Color32::GRAY })).on_hover_text(self.t("paramètres trouvés"));
+                    if ui.small_button("✖").clicked() || (r.has_focus() && ui.input(|i| i.key_pressed(egui::Key::Escape))) {
+                        self.param_search.clear();
+                    }
+                }
+            });
+            set_search(&self.param_search);
             egui::ScrollArea::vertical().auto_shrink([false; 2]).show(ui, |ui| {
                 changed |= self.params_ui(ui);
             });
@@ -63,7 +79,8 @@ impl App {
         let units = self.cfg.units.clone();
         let lang = self.cfg.lang;
         let t = |k: &'static str| T(lang, k);
-        ui.horizontal(|ui| {
+        // barre d'actions : passe à la ligne au lieu d'élargir le panneau (portable)
+        ui.horizontal_wrapped(|ui| {
             let busy = self.job.is_some();
             if ui
                 .add_enabled(!busy, egui::Button::new(RichText::new(format!("▶ {}", t("Calcul"))).strong()).fill(Color32::from_rgb(0, 110, 160)))
@@ -98,7 +115,7 @@ impl App {
         });
         ui.add_space(4.0);
 
-        egui::CollapsingHeader::new(RichText::new(format!("▣ {}", t("Projet et variante"))).strong()).default_open(true).show(ui, |ui| {
+        egui::CollapsingHeader::new(RichText::new(format!("▣ {}", t("Projet et variante"))).strong()).default_open(true).open(search_open()).show(ui, |ui| {
             egui::Grid::new("g_proj").num_columns(2).spacing([10.0, 6.0]).show(ui, |ui| {
                 lbl(ui, t("Nom"));
                 ch |= ui.text_edit_singleline(&mut self.spec.name).changed();
@@ -151,7 +168,7 @@ impl App {
             });
         });
 
-        egui::CollapsingHeader::new(RichText::new(format!("⚙ {}", t("Topologie"))).strong()).default_open(true).show(ui, |ui| {
+        egui::CollapsingHeader::new(RichText::new(format!("⚙ {}", t("Topologie"))).strong()).default_open(true).open(search_open()).show(ui, |ui| {
             egui::Grid::new("g_topo").num_columns(2).spacing([10.0, 6.0]).show(ui, |ui| {
                 lbl(ui, t("Type de machine"));
                 let tn = |tp: Topology| match tp {
@@ -215,7 +232,7 @@ impl App {
             });
         });
 
-        egui::CollapsingHeader::new(RichText::new(format!("◎ {}", t("Stator"))).strong()).default_open(true).show(ui, |ui| {
+        egui::CollapsingHeader::new(RichText::new(format!("◎ {}", t("Stator"))).strong()).default_open(true).open(search_open()).show(ui, |ui| {
             egui::Grid::new("g_stator").num_columns(2).spacing([10.0, 6.0]).show(ui, |ui| {
                 match self.spec.topology {
                     Topology::RadialOuter => {
@@ -250,7 +267,7 @@ impl App {
             });
         });
 
-        egui::CollapsingHeader::new(RichText::new(format!("⚛ {}", t("Entrefer, aimants et rotor"))).strong()).default_open(true).show(ui, |ui| {
+        egui::CollapsingHeader::new(RichText::new(format!("⚛ {}", t("Entrefer, aimants et rotor"))).strong()).default_open(true).open(search_open()).show(ui, |ui| {
             egui::Grid::new("g_rotor").num_columns(2).spacing([10.0, 6.0]).show(ui, |ui| {
                 ch |= Self::len_edit(ui, &units, t("Entrefer"), &mut self.spec.airgap, 0.02, 20.0);
                 ch |= Self::len_edit(ui, &units, t("Épaisseur aimant"), &mut self.spec.magnet_th, 0.1, 50.0);
@@ -287,7 +304,7 @@ impl App {
             });
         });
 
-        egui::CollapsingHeader::new(RichText::new(format!("✿ {}", t("Répartition des aimants"))).strong()).default_open(true).show(ui, |ui| {
+        egui::CollapsingHeader::new(RichText::new(format!("✿ {}", t("Répartition des aimants"))).strong()).default_open(true).open(search_open()).show(ui, |ui| {
             egui::Grid::new("g_phi").num_columns(2).spacing([10.0, 6.0]).show(ui, |ui| {
                 if crate::repartition::uses_offsets() {
                     let fa = units.factor(Q::Angle);
@@ -354,7 +371,7 @@ impl App {
             }
         });
 
-        egui::CollapsingHeader::new(RichText::new(format!("⟳ {}", t("Bobinage et vitesse"))).strong()).default_open(false).show(ui, |ui| {
+        egui::CollapsingHeader::new(RichText::new(format!("⟳ {}", t("Bobinage et vitesse"))).strong()).default_open(false).open(search_open()).show(ui, |ui| {
             egui::Grid::new("g_wind").num_columns(2).spacing([10.0, 6.0]).show(ui, |ui| {
                 lbl(ui, t("Spires par bobine"));
                 ch |= ui.add(egui::DragValue::new(&mut self.spec.turns_per_coil).clamp_range(1.0..=500.0).speed(0.2)).changed();
@@ -370,7 +387,7 @@ impl App {
             });
         });
 
-        egui::CollapsingHeader::new(RichText::new(format!("⚡ {}", t("Bobinage général et charge"))).strong()).default_open(false).show(ui, |ui| {
+        egui::CollapsingHeader::new(RichText::new(format!("⚡ {}", t("Bobinage général et charge"))).strong()).default_open(false).open(search_open()).show(ui, |ui| {
             egui::Grid::new("g_load").num_columns(2).spacing([10.0, 6.0]).show(ui, |ui| {
                 lbl(ui, t("Courant de phase crête"));
                 ch |= ui.add(egui::DragValue::new(&mut self.spec.load.i_peak).clamp_range(0.0..=1e5).speed(0.1).suffix(" A")).changed();
@@ -445,7 +462,7 @@ impl App {
             }
         });
 
-        egui::CollapsingHeader::new(RichText::new(format!("🔩 {}", t("Matériaux du fer et saturation"))).strong()).default_open(false).show(ui, |ui| {
+        egui::CollapsingHeader::new(RichText::new(format!("🔩 {}", t("Matériaux du fer et saturation"))).strong()).default_open(false).open(search_open()).show(ui, |ui| {
             let sat = &mut self.spec.saturation;
             egui::Grid::new("g_sat").num_columns(2).spacing([10.0, 6.0]).show(ui, |ui| {
                 for (label, m) in [(t("Matériau du stator"), &mut sat.stator), (t("Matériau de la culasse du rotor"), &mut sat.rotor)] {
@@ -465,7 +482,7 @@ impl App {
             });
             ui.label(RichText::new(t("Courbes B(H) typiques ; saturation estimée par la méthode du facteur de saturation (onglet Charge).")).small().weak());
         });
-        egui::CollapsingHeader::new(RichText::new(format!("🔥 {}", t("Frottements, fer et thermique"))).strong()).default_open(false).show(ui, |ui| {
+        egui::CollapsingHeader::new(RichText::new(format!("🔥 {}", t("Frottements, fer et thermique"))).strong()).default_open(false).open(search_open()).show(ui, |ui| {
             // ces paramètres n'exigent pas de recalcul magnétique : effet immédiat
             let d = &mut self.spec.dynamics;
             egui::Grid::new("g_dyn").num_columns(2).spacing([10.0, 6.0]).show(ui, |ui| {
@@ -491,7 +508,7 @@ impl App {
             });
         });
 
-        egui::CollapsingHeader::new(RichText::new(format!("☰ {}", t("Précision du calcul"))).strong()).default_open(false).show(ui, |ui| {
+        egui::CollapsingHeader::new(RichText::new(format!("☰ {}", t("Précision du calcul"))).strong()).default_open(false).open(search_open()).show(ui, |ui| {
             egui::Grid::new("g_num").num_columns(2).spacing([10.0, 6.0]).show(ui, |ui| {
                 lbl(ui, t("Harmoniques d'entrefer"));
                 ch |= ui.add(egui::DragValue::new(&mut self.st.res.nh).clamp_range(50..=2000)).changed();

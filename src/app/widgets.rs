@@ -318,6 +318,28 @@ pub(super) fn with_tip(r: egui::Response, text: &str) -> egui::Response {
 }
 
 static DEMO_FOCUS: std::sync::Mutex<Option<String>> = std::sync::Mutex::new(None);
+static SEARCH: std::sync::Mutex<String> = std::sync::Mutex::new(String::new());
+static SEARCH_FIRST: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+static SEARCH_HITS: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+
+/// Texte recherché dans les paramètres (minuscules) ; remis à zéro du compteur à chaque image.
+pub(super) fn set_search(q: &str) {
+    if let Ok(mut s) = SEARCH.lock() {
+        *s = q.trim().to_lowercase();
+    }
+    SEARCH_FIRST.store(true, std::sync::atomic::Ordering::Relaxed);
+    SEARCH_HITS.store(0, std::sync::atomic::Ordering::Relaxed);
+}
+
+/// Nombre de paramètres trouvés à l'image précédente.
+pub(super) fn search_hits() -> usize {
+    SEARCH_HITS.load(std::sync::atomic::Ordering::Relaxed)
+}
+
+/// Recherche en cours : sections dépliées.
+pub(super) fn search_open() -> Option<bool> {
+    SEARCH.lock().ok().filter(|s| !s.is_empty()).map(|_| true)
+}
 static PANEL_RIGHT: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
 
 /// Bord droit du panneau des paramètres (limite du cadre rouge de la démo).
@@ -336,6 +358,19 @@ pub(super) fn set_demo_focus(label: Option<String>) {
 /// ligne du champ en cours de saisie est encadrée en rouge.
 pub(super) fn lbl(ui: &mut egui::Ui, text: &str) -> egui::Response {
     let r = ui.label(text);
+    let q = SEARCH.lock().map(|s| s.clone()).unwrap_or_default();
+    if q.len() >= 2 && text.to_lowercase().contains(&q) {
+        let right = f32::from_bits(PANEL_RIGHT.load(std::sync::atomic::Ordering::Relaxed));
+        let right = if right > r.rect.right() { right } else { ui.clip_rect().right() };
+        let row = egui::Rect::from_min_max(r.rect.min - Vec2::new(6.0, 4.0), egui::pos2(right - 6.0, r.rect.max.y + 4.0));
+        let p = ui.ctx().layer_painter(egui::LayerId::new(egui::Order::Foreground, egui::Id::new("search_focus")));
+        p.rect_stroke(row, 4.0, egui::Stroke::new(2.0_f32, Color32::from_rgb(240, 200, 40)));
+        p.rect_filled(row, 4.0, Color32::from_rgba_unmultiplied(240, 200, 40, 26));
+        SEARCH_HITS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        if SEARCH_FIRST.swap(false, std::sync::atomic::Ordering::Relaxed) {
+            r.scroll_to_me(Some(egui::Align::Center));
+        }
+    }
     if DEMO_FOCUS.lock().ok().is_some_and(|f| f.as_deref() == Some(text)) {
         let right = f32::from_bits(PANEL_RIGHT.load(std::sync::atomic::Ordering::Relaxed));
         let right = if right > r.rect.right() { right } else { ui.clip_rect().right() };

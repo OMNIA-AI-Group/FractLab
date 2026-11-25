@@ -53,11 +53,6 @@ pub(super) struct Console {
     pub graph: super::graphe_ia::GraphView,
     /// projet de la ligne de commande (repris d'une commande à l'autre)
     pub session: Option<MotorSpec>,
-    /// taille de l'application lors de la création de la fenêtre console, et numéro de
-    /// fenêtre : si l'application change nettement de taille, la console repart à sa
-    /// taille par défaut (proportionnelle à l'écran)
-    pub screen: egui::Vec2,
-    pub win: u64,
 }
 
 const EXAMPLE: &str = "# Exemple : calculer le projet, décomposer l'ondulation, puis l'optimiser
@@ -91,8 +86,6 @@ impl Default for Console {
             out: Vec::new(),
             job: None,
             session: None,
-            screen: egui::Vec2::ZERO,
-            win: 0,
             graph: Default::default(),
         }
     }
@@ -175,16 +168,11 @@ impl App {
         self.console.job = Some(crate::script::run(start, self.st, src));
     }
 
-    pub(super) fn console_window(&mut self, ctx: &egui::Context) {
+    /// Onglet « Console » : moteur I.A (bilan, graphe, journal) et script.
+    pub(super) fn console_tab(&mut self, ui: &mut egui::Ui) {
         let lang = self.cfg.lang;
         let t = |k: &'static str| T(lang, k);
-        let mut open = self.console.open;
-        let sz = ctx.screen_rect().size();
-        if (sz - self.console.screen).length() > 150.0 {
-            self.console.screen = sz;
-            self.console.win += 1;
-        }
-        egui::Window::new(format!("🖥 {}", t("Console"))).id(egui::Id::new(("console", self.console.win))).open(&mut open).default_size([(ctx.screen_rect().width() * 0.6).clamp(900.0, 1800.0), (ctx.screen_rect().height() * 0.85).clamp(500.0, 1700.0)]).max_height(ctx.screen_rect().height() - 30.0).resizable(true).show(ctx, |ui| {
+        ui.scope(|ui| {
             ui.horizontal(|ui| {
                 let running_ia = self.opt_job.is_some();
                 let ia_lbl = format!("🧠 {}{}", t("Moteur I.A"), if running_ia { " ●" } else { "" });
@@ -223,7 +211,6 @@ impl App {
                 ConsoleTab::Script => self.console_script(ui),
             }
         });
-        self.console.open = open;
     }
 
     fn console_ia(&mut self, ui: &mut egui::Ui) {

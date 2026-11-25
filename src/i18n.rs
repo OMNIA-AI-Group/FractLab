@@ -1022,6 +1022,12 @@ pub static TABLE: &[(&str, &str, &str, &str)] = &[
     ("Ouvert :", "Opened:", "Abierto:", "Geöffnet:"),
     ("modifié", "modified", "modificado", "geändert"),
     ("Projet modifié depuis l'enregistrement : cliquer pour voir les modifications", "Project modified since last save: click to see the changes", "Proyecto modificado desde el guardado: haga clic para ver los cambios", "Projekt seit dem Speichern geändert: klicken, um die Änderungen zu sehen"),
+    // navigation par étapes, recherche
+    ("Rechercher un paramètre…", "Search a parameter…", "Buscar un parámetro…", "Parameter suchen…"),
+    ("paramètres trouvés", "parameters found", "parámetros encontrados", "gefundene Parameter"),
+    ("Conception", "Design", "Diseño", "Entwurf"),
+    ("Analyse", "Analysis", "Análisis", "Analyse"),
+    ("Optimisation", "Optimisation", "Optimización", "Optimierung"),
 ];
 
 #[cfg(test)]

@@ -137,6 +137,12 @@ enum Tab {
     Carte3d,
     Validation,
     Parametrique,
+    /// Ajustement I.A (réglages, propositions).
+    Ia,
+    /// Console : moteur I.A et script.
+    Console,
+    /// Comparaison des solutions de l'Ajustement I.A.
+    Solutions,
 }
 
 #[derive(Default, Clone, Copy)]
@@ -297,6 +303,10 @@ pub struct App {
     cmpia: comparaison_ia::CmpIa,
     /// annuler / rétablir, projet modifié
     hist: historique::EditHistory,
+    /// dernier onglet ouvert dans chaque étape de l'étude
+    step_tab: [Option<Tab>; 4],
+    /// recherche dans le panneau des paramètres
+    param_search: String,
     /// fiche du projet SIMUMSAP ouvert (champs, inductances de référence, dossier)
     simu: Option<(Vec<(String, String)>, Option<Vec<Vec<f64>>>, std::path::PathBuf)>,
     /// figures MATLAB chargées : (fichier, axes)
@@ -352,7 +362,7 @@ pub struct App {
     full: Option<Tab>,
 }
 
-const ALL_TABS: [(Tab, &str, &str); 13] = [
+const ALL_TABS: [(Tab, &str, &str); 16] = [
     (Tab::Synthese, "📋", "Synthèse"),
     (Tab::Geometrie, "◎", "Géométrie"),
     (Tab::Champ, "🌊", "Champ"),
@@ -366,6 +376,17 @@ const ALL_TABS: [(Tab, &str, &str); 13] = [
     (Tab::Carte3d, "🗻", "Cartes 3D"),
     (Tab::Validation, "✔", "Validation"),
     (Tab::Parametrique, "📈", "Paramétrique"),
+    (Tab::Ia, "✨", "Ajustement I.A"),
+    (Tab::Console, "🖥", "Console"),
+    (Tab::Solutions, "⚖", "Comparaison des solutions"),
+];
+
+/// Étapes d'une étude : (nom, icône, onglets).
+const STEPS: [(&str, &str, &[Tab]); 4] = [
+    ("Conception", "✏", &[Tab::Synthese, Tab::Geometrie, Tab::Moteur3d]),
+    ("Analyse", "🔬", &[Tab::Champ, Tab::Cogging, Tab::Fem, Tab::Forces, Tab::Charge, Tab::Dynamique, Tab::Carte3d]),
+    ("Optimisation", "✨", &[Tab::Ia, Tab::Console, Tab::Solutions, Tab::Parametrique, Tab::Comparaison]),
+    ("Validation", "✔", &[Tab::Validation]),
 ];
 
 fn tab_from_name(n: &str) -> Option<Tab> {
@@ -545,6 +566,8 @@ impl App {
             console: Default::default(),
             cmpia: Default::default(),
             hist: Default::default(),
+            step_tab: [None; 4],
+            param_search: std::env::var("FRACTLAB_RECHERCHE").unwrap_or_default(),
             demo: demo::DemoState {
                 pending: std::env::var("FRACTLAB_DEMO").ok().and_then(|k| crate::demo::MOTORS.iter().find(|m| m.key == k).map(|m| m.key)),
                 confirm: std::env::var("FRACTLAB_DEMO").as_deref() == Ok("choix"),
@@ -904,6 +927,13 @@ impl eframe::App for App {
         crate::i18n::set_lang(self.cfg.lang);
         self.demo_tick(ctx);
         self.menu_bar(ctx);
+        // demandes d'ouverture (boutons, menus, fin d'ajustement) : l'onglet correspondant
+        for (want, tab) in [(std::mem::take(&mut self.show_opt), Tab::Ia), (std::mem::take(&mut self.console.open), Tab::Console), (std::mem::take(&mut self.cmpia.open), Tab::Solutions)] {
+            if want {
+                self.tab = tab;
+                self.full = None;
+            }
+        }
         if self.show_params && self.full.is_none() {
             self.params_panel(ctx);
         }
@@ -929,19 +959,13 @@ impl eframe::App for App {
         self.poll_opt(ctx);
         self.poll_script(ctx);
         self.demo_windows(ctx);
-        self.cmpia_window(ctx);
+        self.cmpia_poll(ctx);
         self.changes_window(ctx);
-        if self.console.open {
-            self.console_window(ctx);
-        }
         if self.show_redac {
             self.redac_window(ctx);
         }
         if self.show_save {
             self.save_window(ctx);
-        }
-        if self.show_opt {
-            self.opt_window(ctx);
         }
         if self.simu.is_some() {
             self.simu_window(ctx);
