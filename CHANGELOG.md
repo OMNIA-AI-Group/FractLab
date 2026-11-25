@@ -5,6 +5,17 @@ Format : une section par version, la plus récente en premier.
 
 ## Prochaine version (en préparation)
 
+- **Comparaison des solutions** (après un Ajustement I.A, bouton
+  « ⚖ Comparer les solutions » dans la fenêtre de l'ajustement et dans la
+  console) : le moteur original et les 5 meilleures propositions (plus
+  l'essai choisi dans le graphe 3D) recalculés en calcul complet ; tableau
+  de 18 métriques avec l'écart à l'original (vert / rouge selon le sens
+  favorable) et la meilleure valeur de chaque ligne ; graphiques superposés
+  (couple de détente, spectre, FEM, force, couple en charge) et profil
+  normalisé ; « Appliquer » ou « Garder l'original » ; tableau copiable en
+  CSV.
+- **Journal des essais** : au moins 5 lignes visibles à l'ouverture, plus
+  quand la fenêtre est agrandie.
 - **Ajustement I.A** : amplitude minimale des décalages réglable quand
   l'amplitude est un réglage libre (empêche l'ajustement de revenir à un
   rotor régulier) ; commande de script `ia … amin=2`. Trois objectifs
@@ -17,7 +28,7 @@ Format : une section par version, la plus récente en premier.
   ou sans becs de dents. Le modèle à encoches ouvertes de SIMUMSAP surestime
   l'inductance d'environ 20 % sur des encoches larges (voir docs/MODELE.md).
 
-*English — Minimum offset amplitude and three spectral goals (most spread spectrum, maximum entropy, spread/low-cogging trade-off) for A.I. tuning; inductance checked
+*English — Solution comparison window after A.I. tuning (original and proposals fully recomputed, 18 metrics, overlaid charts, normalised profile, apply or keep the original, CSV); trial log shows at least 5 lines. Minimum offset amplitude and three spectral goals (most spread spectrum, maximum entropy, spread/low-cogging trade-off) for A.I. tuning; inductance checked
 against finite volumes (< 1 %); SIMUMSAP's open-slot model overestimates
 inductance by about 20 % on wide slots.*
 

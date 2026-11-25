@@ -213,6 +213,7 @@ impl App {
                 ui.label(format!("· {} {} / {} · {} {} · {} {} · {:.0} ms / {}", trials.len(), t("essais"), self.opt_prog.1.max(trials.len()), starts, t("départs"), n_rej, t("rejetés"), ms, t("essai")));
             }
         });
+        let mut want_cmp = false;
         // bilan : départ → meilleure solution faisable
         let best = trials.iter().filter(|t| t.cand.feasible).min_by(|a, b| a.cand.score.total_cmp(&b.cand.score));
         if let (Some(r), Some(b)) = (&self.console.ia_ref, best) {
@@ -247,10 +248,20 @@ impl App {
                 let mut vals: Vec<String> = self.console.ia_vars.iter().zip(&c.values).map(|(v, x)| format!("{} = {}", t(v.name()), fnum(*x))).collect();
                 vals.push(format!("{} = {} mm", t("Culasse rotor"), fnum(c.rotor_yoke_mm)));
                 ui.label(RichText::new(vals.join(" · ")).monospace());
+                if !running
+                    && self.opt_base.is_some()
+                    && !self.opt_top.is_empty()
+                    && ui.add(egui::Button::new(RichText::new(format!("⚖ {}", t("Comparer les solutions"))).strong().color(Color32::WHITE)).fill(Color32::from_rgb(0, 120, 90))).clicked()
+                {
+                    want_cmp = true;
+                }
             });
         }
         let has_trials = !trials.is_empty();
         drop(trials);
+        if want_cmp {
+            self.cmpia_start();
+        }
         // graphe 3D des possibilités explorées, au-dessus du journal
         if has_trials {
             // le journal déroulant reste visible sous le graphe
@@ -314,7 +325,11 @@ impl App {
             }
         }).collect();
         let row_h = ui.text_style_height(&egui::TextStyle::Monospace);
-        egui::ScrollArea::both().id_source("ia_log").max_height(260.0).auto_shrink([false, true]).stick_to_bottom(self.console.follow).show_rows(ui, row_h, lines.len(), |ui, range| {
+        // au moins 5 lignes ; davantage quand la fenêtre est agrandie (place restante jusqu'au bas visible)
+        let min_h = row_h * 5.5 + 8.0;
+        let room = ui.clip_rect().bottom() - ui.cursor().top() - 12.0;
+        let h = room.max(min_h);
+        egui::ScrollArea::both().id_source("ia_log").min_scrolled_height(h).max_height(h).auto_shrink([false, false]).stick_to_bottom(self.console.follow).show_rows(ui, row_h, lines.len(), |ui, range| {
             for (col, s, strong) in &lines[range] {
                 let mut rt = RichText::new(s).monospace().color(*col);
                 if *strong {

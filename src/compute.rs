@@ -78,6 +78,12 @@ pub enum Msg {
     SweepRow(f64, Vec<f64>),
     /// Étude paramétrique terminée.
     SweepDone,
+    /// Comparaison de solutions : résultat complet de la solution n° k.
+    Solution(usize, Box<ResultsWire>),
+    /// Comparaison de solutions : la solution n° k ne se calcule pas.
+    SolutionError(usize, String),
+    /// Comparaison de solutions terminée.
+    SolutionsDone,
 }
 
 /// Tâche de fond en cours.
@@ -152,6 +158,8 @@ pub enum Request {
     Validation(MotorSpec, Settings, usize, usize),
     /// Étude paramétrique : (paramètre, de, à, points).
     Sweep(MotorSpec, Settings, crate::sweep::SweepVar, f64, f64, usize),
+    /// Comparaison de solutions : chaque projet en calcul complet.
+    Solutions(Vec<MotorSpec>, Settings),
 }
 
 /// Résultats sans le modèle, pour passer d'un Web Worker à l'interface (le
@@ -230,6 +238,12 @@ pub enum OtherMsg {
     SweepRow(f64, Vec<f64>),
     /// Étude terminée.
     SweepDone,
+    /// Solution calculée.
+    Solution(usize, Box<ResultsWire>),
+    /// Solution impossible.
+    SolutionError(usize, String),
+    /// Comparaison de solutions terminée.
+    SolutionsDone,
 }
 
 impl Msg {
@@ -243,6 +257,9 @@ impl Msg {
             Msg::Validation(r, o) => WireMsg::Other(OtherMsg::Validation(r, o)),
             Msg::SweepRow(v, o) => WireMsg::Other(OtherMsg::SweepRow(v, o)),
             Msg::SweepDone => WireMsg::Other(OtherMsg::SweepDone),
+            Msg::Solution(k, w) => WireMsg::Other(OtherMsg::Solution(k, w)),
+            Msg::SolutionError(k, e) => WireMsg::Other(OtherMsg::SolutionError(k, e)),
+            Msg::SolutionsDone => WireMsg::Other(OtherMsg::SolutionsDone),
         }
     }
 }
@@ -258,6 +275,9 @@ impl WireMsg {
             WireMsg::Other(OtherMsg::Validation(r, o)) => Msg::Validation(r, o),
             WireMsg::Other(OtherMsg::SweepRow(v, o)) => Msg::SweepRow(v, o),
             WireMsg::Other(OtherMsg::SweepDone) => Msg::SweepDone,
+            WireMsg::Other(OtherMsg::Solution(k, w)) => Msg::Solution(k, w),
+            WireMsg::Other(OtherMsg::SolutionError(k, e)) => Msg::SolutionError(k, e),
+            WireMsg::Other(OtherMsg::SolutionsDone) => Msg::SolutionsDone,
         }
     }
 }
@@ -278,6 +298,15 @@ pub fn execute(req: Request, send: &mut dyn FnMut(Msg)) {
                 send(Msg::Progress(format!("{} {}/{}", crate::i18n::tr("étude paramétrique"), k + 1, n)));
             }
             send(Msg::SweepDone);
+        }
+        Request::Solutions(specs, st) => {
+            for (k, s) in specs.into_iter().enumerate() {
+                match compute_results(s, &st) {
+                    Ok(r) => send(Msg::Solution(k, Box::new(r.to_wire()))),
+                    Err(e) => send(Msg::SolutionError(k, e)),
+                }
+            }
+            send(Msg::SolutionsDone);
         }
         Request::Compare(base, st) => {
             let names = crate::repartition::variants();

@@ -19,6 +19,7 @@ use std::f64::consts::PI;
 
 mod axial;
 mod champ3d;
+mod comparaison_ia;
 mod console;
 mod criteres;
 mod demo;
@@ -284,6 +285,8 @@ pub struct App {
     console: console::Console,
     /// démo
     demo: demo::DemoState,
+    /// comparaison des solutions de l'Ajustement I.A
+    cmpia: comparaison_ia::CmpIa,
     /// fiche du projet SIMUMSAP ouvert (champs, inductances de référence, dossier)
     simu: Option<(Vec<(String, String)>, Option<Vec<Vec<f64>>>, std::path::PathBuf)>,
     /// figures MATLAB chargées : (fichier, axes)
@@ -515,7 +518,7 @@ impl App {
             restore_base: false,
             opt_live_score: f64::INFINITY,
             opt_vars_run: Vec::new(),
-            show_opt: std::env::var("FRACTLAB_IA").is_ok_and(|v| v != "console"),
+            show_opt: std::env::var("FRACTLAB_IA").is_ok_and(|v| v != "console" && v != "compare"),
             opt_vars: crate::optimize::ALL_VARS.iter().filter(|v| **v != crate::optimize::Var::SkewAmp || crate::repartition::uses_offsets()).map(|v| (*v, matches!(v, crate::optimize::Var::ArcRatio | crate::optimize::Var::SkewAmp | crate::optimize::Var::SlotOpen))).collect(),
             opt_goal: crate::optimize::Goal::MinCogging,
             opt_budget: 150,
@@ -528,6 +531,7 @@ impl App {
             opt_sat_limit: false,
             opt_skew_min: if crate::repartition::uses_offsets() { 1.0 } else { 0.0 },
             console: Default::default(),
+            cmpia: Default::default(),
             demo: demo::DemoState {
                 pending: std::env::var("FRACTLAB_DEMO").ok().and_then(|k| crate::demo::MOTORS.iter().find(|m| m.key == k).map(|m| m.key)),
                 confirm: std::env::var("FRACTLAB_DEMO").as_deref() == Ok("choix"),
@@ -618,7 +622,7 @@ impl App {
             app.recal_job = Some(crate::recalage::run(app.spec.clone(), setup));
         }
         // démonstration : FRACTLAB_IA=run lance l'ajustement en direct
-        if matches!(std::env::var("FRACTLAB_IA").as_deref(), Ok("run") | Ok("console")) {
+        if matches!(std::env::var("FRACTLAB_IA").as_deref(), Ok("run") | Ok("console") | Ok("compare")) {
             let vars: Vec<crate::optimize::Var> = app.opt_vars.iter().filter(|(_, on)| *on).map(|(v, _)| *v).collect();
             app.opt_base = Some(app.spec.clone());
             app.opt_vars_run = vars.clone();
@@ -706,6 +710,8 @@ impl App {
                     self.fresh.insert(Tab::Parametrique);
                 }
                 Msg::SweepDone => self.status = self.t("Étude paramétrique terminée").into(),
+                // la comparaison de solutions a sa propre tâche (fenêtre dédiée)
+                Msg::Solution(..) | Msg::SolutionError(..) | Msg::SolutionsDone => {}
                 Msg::Validation(rows, open) => {
                     self.validation = Some((rows, open));
                     self.fresh.insert(Tab::Validation);
@@ -907,6 +913,7 @@ impl eframe::App for App {
         self.poll_opt(ctx);
         self.poll_script(ctx);
         self.demo_windows(ctx);
+        self.cmpia_window(ctx);
         if self.console.open {
             self.console_window(ctx);
         }

@@ -348,6 +348,9 @@ impl App {
         if done {
             self.opt_job = None;
             self.status = T(self.cfg.lang, "Ajustement I.A terminé").into();
+            if std::env::var("FRACTLAB_IA").as_deref() == Ok("compare") {
+                self.cmpia_start();
+            }
         }
     }
 
@@ -413,6 +416,13 @@ impl App {
                 }
                 if running {
                     ui.spinner();
+                }
+                if !running
+                    && !self.opt_top.is_empty()
+                    && self.opt_base.is_some()
+                    && ui.add(egui::Button::new(RichText::new(format!("⚖ {}", t("Comparer les solutions"))).strong().color(Color32::WHITE)).fill(Color32::from_rgb(0, 120, 90))).on_hover_text(t("Original et propositions recalculés en calcul complet, métriques et graphiques côte à côte, puis choix de la solution")).clicked()
+                {
+                    self.cmpia_start();
                 }
                 if ui.button(format!("🖥 {}", t("Console du moteur I.A"))).clicked() {
                     self.console.open = true;
