@@ -148,6 +148,21 @@ fn col(k: usize) -> Color32 {
     if k == 0 { Color32::from_gray(200) } else { SERIES[(k - 1) % SERIES.len()] }
 }
 
+impl CmpIa {
+    /// Aucune comparaison affichée (ni calculée ni relue) ?
+    pub(super) fn is_empty(&self) -> bool {
+        self.specs.is_empty()
+    }
+
+    /// Nouvel ajustement : la comparaison affichée est oubliée, l'historique reste.
+    pub(super) fn reset_keep_history(&mut self) {
+        let history = self.history.take();
+        let open = self.open;
+        let _ = open;
+        *self = CmpIa { history, ..Default::default() };
+    }
+}
+
 impl App {
     /// Prépare et lance la comparaison : original + 5 meilleures propositions
     /// (+ l'essai choisi dans le graphe 3D s'il n'en fait pas partie).

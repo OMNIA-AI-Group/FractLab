@@ -115,6 +115,7 @@ impl App {
         self.console.ia_ref = None;
         self.console.ia_vars = vars.to_vec();
         self.console.graph = Default::default();
+        self.cmpia.reset_keep_history();
         // le graphe des possibilités s'ouvre à chaque lancement
         self.console.open = true;
         self.console.tab = ConsoleTab::Ia;
@@ -171,7 +172,7 @@ impl App {
         let lang = self.cfg.lang;
         let t = |k: &'static str| T(lang, k);
         let mut open = self.console.open;
-        egui::Window::new(format!("🖥 {}", t("Console"))).open(&mut open).default_size([960.0, 780.0]).resizable(true).show(ctx, |ui| {
+        egui::Window::new(format!("🖥 {}", t("Console"))).open(&mut open).default_size([960.0, (ctx.screen_rect().height() - 40.0).min(780.0)]).max_height(ctx.screen_rect().height() - 30.0).resizable(true).show(ctx, |ui| {
             ui.horizontal(|ui| {
                 let running_ia = self.opt_job.is_some();
                 let ia_lbl = format!("🧠 {}{}", t("Moteur I.A"), if running_ia { " ●" } else { "" });
@@ -182,7 +183,24 @@ impl App {
             ui.separator();
             match self.console.tab {
                 ConsoleTab::Ia => {
-                    egui::ScrollArea::vertical().id_source("ia_tab").auto_shrink([false, false]).show(ui, |ui| self.console_ia(ui));
+                    // partage explicite de la hauteur : bilan + graphe en haut (défilant),
+                    // journal en bas (replié : une ligne ; déplié : ≥ 5 lignes, 35 % si la fenêtre est grande)
+                    let row_h = ui.text_style_height(&egui::TextStyle::Monospace);
+                    let open = egui::collapsing_header::CollapsingState::load_with_default_open(ui.ctx(), egui::Id::new("ia_journal_state"), std::env::var("FRACTLAB_JOURNAL").is_ok()).is_open();
+                    let total = ui.available_height();
+                    let head = row_h + 10.0;
+                    let journal_h = if open { (head + 36.0 + row_h * 5.5).max(total * 0.35) } else { head };
+                    let top_h = (total - journal_h - 8.0).max(120.0);
+                    let w = ui.available_width();
+                    ui.allocate_ui(egui::vec2(w, top_h), |ui| {
+                        ui.set_min_height(top_h);
+                        egui::ScrollArea::vertical().id_source("ia_tab").max_height(top_h).auto_shrink([false, false]).show(ui, |ui| self.console_ia(ui));
+                    });
+                    ui.separator();
+                    ui.allocate_ui(egui::vec2(w, journal_h), |ui| {
+                        ui.set_max_height(journal_h);
+                        self.console_journal(ui);
+                    });
                 }
                 ConsoleTab::Script => self.console_script(ui),
             }
@@ -193,8 +211,7 @@ impl App {
     fn console_ia(&mut self, ui: &mut egui::Ui) {
         let lang = self.cfg.lang;
         let t = |k: &'static str| T(lang, k);
-        let dark = self.cfg.theme == Theme::Sombre;
-        let running = self.opt_job.is_some();
+                let running = self.opt_job.is_some();
         // en-tête : état de la résolution
         let trials: Vec<&Trial> = self.console.ia.iter().filter_map(|e| if let IaLog::Tr(t) = e { Some(t) } else { None }).collect();
         let n_rej = trials.iter().filter(|t| !t.violations.is_empty()).count();
@@ -264,8 +281,9 @@ impl App {
         }
         // graphe 3D des possibilités explorées, au-dessus du journal
         if has_trials {
-            // le journal déroulant reste visible sous le graphe
-            let h = (ui.available_height() - 70.0).clamp(200.0, 460.0);
+            // le graphe prend la place visible restante (le journal a son propre panneau en bas)
+            let room = ui.clip_rect().bottom() - ui.cursor().top();
+            let h = (room - 40.0).clamp(160.0, 460.0);
             if let Some(n) = self.ia_graph(ui, h)
                 && let Some(base) = self.opt_base.clone()
                 && let Some(tr) = self.console.ia.iter().find_map(|e| if let IaLog::Tr(t) = e && t.n == n { Some(t.cand.clone()) } else { None })
@@ -276,9 +294,22 @@ impl App {
                 self.status = format!("{} #{n}", t("Essai appliqué"));
             }
         }
-        // journal en menu déroulant
+    }
+
+
+    /// Journal des essais : panneau fixé en bas de l'onglet Moteur I.A
+    /// (replié : une ligne ; déplié : au moins 5 lignes, redimensionnable).
+    fn console_journal(&mut self, ui: &mut egui::Ui) {
+        let lang = self.cfg.lang;
+        let t = |k: &'static str| T(lang, k);
+        let dark = self.cfg.theme == Theme::Sombre;
+        let running = self.opt_job.is_some();
         let n_lines = self.console.ia.len();
-        egui::CollapsingHeader::new(RichText::new(format!("📜 {} ({n_lines})", t("Journal des essais"))).strong()).id_source("ia_journal").default_open(!has_trials).show(ui, |ui| {
+        let state = egui::collapsing_header::CollapsingState::load_with_default_open(ui.ctx(), egui::Id::new("ia_journal_state"), std::env::var("FRACTLAB_JOURNAL").is_ok());
+        state.show_header(ui, |ui| {
+            ui.label(RichText::new(format!("📜 {} ({n_lines})", t("Journal des essais"))).strong());
+        })
+        .body(|ui| {
         ui.horizontal_wrapped(|ui| {
             ui.radio_value(&mut self.console.ia_filter, IaFilter::All, t("Tous les essais"));
             ui.radio_value(&mut self.console.ia_filter, IaFilter::Best, t("Nouveaux meilleurs"));
@@ -325,10 +356,8 @@ impl App {
             }
         }).collect();
         let row_h = ui.text_style_height(&egui::TextStyle::Monospace);
-        // au moins 5 lignes ; davantage quand la fenêtre est agrandie (place restante jusqu'au bas visible)
-        let min_h = row_h * 5.5 + 8.0;
-        let room = ui.clip_rect().bottom() - ui.cursor().top() - 12.0;
-        let h = room.max(min_h);
+        // toute la hauteur du panneau (au moins 5 lignes, plus si on l'agrandit)
+        let h = ui.available_height().max(row_h * 5.5);
         egui::ScrollArea::both().id_source("ia_log").min_scrolled_height(h).max_height(h).auto_shrink([false, false]).stick_to_bottom(self.console.follow).show_rows(ui, row_h, lines.len(), |ui, range| {
             for (col, s, strong) in &lines[range] {
                 let mut rt = RichText::new(s).monospace().color(*col);

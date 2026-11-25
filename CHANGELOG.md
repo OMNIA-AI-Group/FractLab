@@ -14,8 +14,10 @@ Format : une section par version, la plus récente en premier.
   (couple de détente, spectre, FEM, force, couple en charge) et profil
   normalisé ; « Appliquer » ou « Garder l'original » ; tableau copiable en
   CSV.
-- **Journal des essais** : au moins 5 lignes visibles à l'ouverture, plus
-  quand la fenêtre est agrandie.
+- **Journal des essais** : fixé en bas de l'onglet Moteur I.A (il n'est plus
+  poussé hors de la fenêtre par le graphe) ; déplié, au moins 5 lignes, et
+  35 % de la hauteur quand la fenêtre est agrandie.
+- **Menu Calcul** : « Ajustement I.A… » et « Comparaison des solutions… ».
 - **Contraintes de l'Ajustement I.A** : « pertes Joule ≤ original + x % » et
   « couple moyen ≥ x % de l'original » (script : `joule=10`, `couple=0.95`).
   Le couple moyen de l'estimation rapide est calculé par la puissance

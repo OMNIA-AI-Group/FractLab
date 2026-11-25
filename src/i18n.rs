@@ -997,6 +997,7 @@ pub static TABLE: &[(&str, &str, &str, &str)] = &[
     ("Couple moyen ≥", "Mean torque ≥", "Par medio ≥", "Mittleres Moment ≥"),
     ("de l'original", "of the original", "del original", "des Originals"),
     ("pertes Joule au-dessus du seuil", "copper losses above the limit", "pérdidas Joule por encima del umbral", "Kupferverluste über der Grenze"),
+    ("Après un Ajustement I.A : original et propositions côte à côte ; sinon l'historique des comparaisons", "After an A.I. tuning: original and proposals side by side; otherwise the comparison history", "Tras un Ajuste I.A: original y propuestas lado a lado; si no, el historial de comparaciones", "Nach einer K.I.-Abstimmung: Original und Vorschläge nebeneinander; sonst der Vergleichsverlauf"),
 ];
 
 #[cfg(test)]

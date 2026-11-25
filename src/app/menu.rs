@@ -44,7 +44,23 @@ impl App {
                         self.launch();
                         ui.close_menu();
                     }
-                    if ui.button(self.t("Comparer toutes les variantes")).clicked() {
+                    ui.separator();
+                    if ui.button(format!("✨ {}…", self.t("Ajustement I.A"))).clicked() {
+                        self.show_opt = true;
+                        ui.close_menu();
+                    }
+                    if ui.button(format!("⚖ {}…", self.t("Comparaison des solutions"))).on_hover_text(self.t("Après un Ajustement I.A : original et propositions côte à côte ; sinon l'historique des comparaisons")).clicked() {
+                        // résultats d'un ajustement pas encore comparés : nouvelle comparaison ; sinon historique
+                        let fresh = self.opt_job.is_none() && self.opt_base.is_some() && !self.opt_top.is_empty() && self.cmpia.is_empty();
+                        if fresh {
+                            self.cmpia_start();
+                        } else {
+                            self.cmpia.open = true;
+                        }
+                        ui.close_menu();
+                    }
+                    ui.separator();
+                    if crate::repartition::variants().len() > 1 && ui.button(self.t("Comparer toutes les variantes")).clicked() {
                         self.cmp_job = Some(compute::run_compare(self.spec.clone(), self.st));
                         self.tab = Tab::Comparaison;
                         ui.close_menu();

@@ -131,7 +131,8 @@ impl App {
             ui.label(RichText::new(t("glisser : tourner · molette : zoom · clic : détail")).small().weak());
         });
         let (rect, resp) = ui.allocate_exact_size(egui::vec2(ui.available_width(), height), egui::Sense::click_and_drag());
-        let painter = ui.painter_at(rect);
+        // découpé aussi par la zone visible (le graphe est dans une zone défilante)
+        let painter = ui.painter().with_clip_rect(rect.intersect(ui.clip_rect()));
         painter.rect_filled(rect, 6.0, if dark { Color32::from_rgb(30, 30, 30) } else { Color32::from_rgb(245, 245, 248) });
         if resp.dragged() {
             let d = resp.drag_delta();
