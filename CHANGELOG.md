@@ -18,6 +18,7 @@ Format : une section par version, la plus récente en premier.
   poussé hors de la fenêtre par le graphe) ; déplié, au moins 5 lignes, et
   35 % de la hauteur quand la fenêtre est agrandie.
 - **Menu Calcul** : « Ajustement I.A… » et « Comparaison des solutions… ».
+- **Console** : la fenêtre ne s'allonge plus d'elle-même jusqu'au bas de l'écran (le bouton du journal restait inaccessible) ; taille proportionnelle à l'écran, recalculée quand l'application change nettement de taille.
 - **Comparaison des solutions, nouvelle mise en page** : elle s'ouvre
   d'elle-même à la fin de chaque Ajustement I.A ; métriques à gauche (écart
   à l'original sous chaque valeur), six graphiques visibles en même temps à

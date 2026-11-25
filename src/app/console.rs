@@ -53,6 +53,11 @@ pub(super) struct Console {
     pub graph: super::graphe_ia::GraphView,
     /// projet de la ligne de commande (repris d'une commande à l'autre)
     pub session: Option<MotorSpec>,
+    /// taille de l'application lors de la création de la fenêtre console, et numéro de
+    /// fenêtre : si l'application change nettement de taille, la console repart à sa
+    /// taille par défaut (proportionnelle à l'écran)
+    pub screen: egui::Vec2,
+    pub win: u64,
 }
 
 const EXAMPLE: &str = "# Exemple : calculer le projet, décomposer l'ondulation, puis l'optimiser
@@ -86,6 +91,8 @@ impl Default for Console {
             out: Vec::new(),
             job: None,
             session: None,
+            screen: egui::Vec2::ZERO,
+            win: 0,
             graph: Default::default(),
         }
     }
@@ -172,7 +179,12 @@ impl App {
         let lang = self.cfg.lang;
         let t = |k: &'static str| T(lang, k);
         let mut open = self.console.open;
-        egui::Window::new(format!("🖥 {}", t("Console"))).open(&mut open).default_size([960.0, (ctx.screen_rect().height() - 40.0).min(780.0)]).max_height(ctx.screen_rect().height() - 30.0).resizable(true).show(ctx, |ui| {
+        let sz = ctx.screen_rect().size();
+        if (sz - self.console.screen).length() > 150.0 {
+            self.console.screen = sz;
+            self.console.win += 1;
+        }
+        egui::Window::new(format!("🖥 {}", t("Console"))).id(egui::Id::new(("console", self.console.win))).open(&mut open).default_size([(ctx.screen_rect().width() * 0.6).clamp(900.0, 1800.0), (ctx.screen_rect().height() * 0.85).clamp(500.0, 1700.0)]).max_height(ctx.screen_rect().height() - 30.0).resizable(true).show(ctx, |ui| {
             ui.horizontal(|ui| {
                 let running_ia = self.opt_job.is_some();
                 let ia_lbl = format!("🧠 {}{}", t("Moteur I.A"), if running_ia { " ●" } else { "" });
@@ -183,24 +195,30 @@ impl App {
             ui.separator();
             match self.console.tab {
                 ConsoleTab::Ia => {
-                    // partage explicite de la hauteur : bilan + graphe en haut (défilant),
-                    // journal en bas (replié : une ligne ; déplié : ≥ 5 lignes, 35 % si la fenêtre est grande)
+                    // découpage en rectangles fixes de la place disponible : le contenu ne
+                    // peut plus agrandir la fenêtre (elle s'allongeait à chaque image et le
+                    // journal finissait sous le bas de l'écran)
                     let row_h = ui.text_style_height(&egui::TextStyle::Monospace);
                     let open = egui::collapsing_header::CollapsingState::load_with_default_open(ui.ctx(), egui::Id::new("ia_journal_state"), std::env::var("FRACTLAB_JOURNAL").is_ok()).is_open();
-                    let total = ui.available_height();
-                    let head = row_h + 10.0;
-                    let journal_h = if open { (head + 36.0 + row_h * 5.5).max(total * 0.35) } else { head };
-                    let top_h = (total - journal_h - 8.0).max(120.0);
-                    let w = ui.available_width();
-                    ui.allocate_ui(egui::vec2(w, top_h), |ui| {
-                        ui.set_min_height(top_h);
-                        egui::ScrollArea::vertical().id_source("ia_tab").max_height(top_h).auto_shrink([false, false]).show(ui, |ui| self.console_ia(ui));
+                    let full = ui.available_rect_before_wrap();
+                    let head = row_h + 12.0;
+                    let journal_h = if open { (head + 36.0 + row_h * 5.5).max(full.height() * 0.35) } else { head };
+                    let journal_h = journal_h.min((full.height() - 120.0).max(head));
+                    let gap = 8.0;
+                    let top = egui::Rect::from_min_max(full.min, egui::pos2(full.max.x, full.max.y - journal_h - gap));
+                    let bot = egui::Rect::from_min_max(egui::pos2(full.min.x, full.max.y - journal_h), full.max);
+                    ui.allocate_ui_at_rect(top, |ui| {
+                        ui.set_clip_rect(top.intersect(ui.clip_rect()));
+                        egui::ScrollArea::vertical().id_source("ia_tab").max_height(top.height()).auto_shrink([false, false]).show(ui, |ui| self.console_ia(ui));
                     });
-                    ui.separator();
-                    ui.allocate_ui(egui::vec2(w, journal_h), |ui| {
-                        ui.set_max_height(journal_h);
+                    let y = top.max.y + gap / 2.0;
+                    ui.painter().hline(full.x_range(), y, ui.visuals().widgets.noninteractive.bg_stroke);
+                    ui.allocate_ui_at_rect(bot, |ui| {
+                        ui.set_clip_rect(bot.intersect(ui.clip_rect()));
                         self.console_journal(ui);
                     });
+                    // la zone consomme exactement la place disponible, ni plus ni moins
+                    ui.allocate_rect(full, egui::Sense::hover());
                 }
                 ConsoleTab::Script => self.console_script(ui),
             }
