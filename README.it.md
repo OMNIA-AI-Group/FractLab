@@ -12,6 +12,14 @@
 <img src="https://img.shields.io/badge/Linux%20%7C%20Windows%20%7C%20Web-x86--64%20%7C%20wasm-informational" alt="Linux | Windows | Web">
 </p>
 
+<p align="center"><b>Scarica l'ultima versione</b><br>
+<a href="https://github.com/OMNIA-AI-Group/FractLab/releases/latest/download/FractLab-x86_64.AppImage"><img src="https://img.shields.io/badge/⬇%20Linux%20%28AppImage%29-2ea44f?style=for-the-badge" alt="Linux (AppImage)"></a>
+<a href="https://github.com/OMNIA-AI-Group/FractLab/releases/latest/download/FractLab-Setup.exe"><img src="https://img.shields.io/badge/⬇%20Windows%20%28installer%29-0078d4?style=for-the-badge" alt="Windows (installer)"></a>
+<a href="https://github.com/OMNIA-AI-Group/FractLab/releases/latest/download/FractLab-windows-portable.zip"><img src="https://img.shields.io/badge/⬇%20Windows%20%28portatile%29-0078d4?style=for-the-badge" alt="Windows (portatile)"></a>
+<a href="https://github.com/OMNIA-AI-Group/FractLab/releases/latest/download/FractLab.html"><img src="https://img.shields.io/badge/⬇%20Browser%20%28file%20.html%29-8250df?style=for-the-badge" alt="Browser (file .html)"></a>
+<a href="https://omnia-ai-group.github.io/FractLab/"><img src="https://img.shields.io/badge/▶%20Prova%20online-ff8c1e?style=for-the-badge" alt="Prova online"></a>
+</p>
+
 ![FractLab](docs/capture.png)
 
 ## Che cos'è FractLab?
@@ -48,10 +56,10 @@ Le versioni pronte all'uso sono nella pagina [Releases](https://github.com/OMNIA
 
 | File | Sistema | Installazione |
 |---|---|---|
-| `FractLab-<version>-x86_64.AppImage` | qualsiasi Linux x86-64 | `chmod +x`, poi doppio clic |
-| `FractLab-<version>-Setup.exe` | Windows 10/11 | programma di installazione |
-| `FractLab-<version>-windows-portable.zip` | Windows 10/11 | estrarre ed eseguire `FractLab\fractlab.exe` |
-| `FractLab-<version>.html` | qualsiasi sistema — Chrome, Edge o Firefox | doppio clic: funziona nel browser, offline, nulla da installare |
+| [`FractLab-x86_64.AppImage`](https://github.com/OMNIA-AI-Group/FractLab/releases/latest/download/FractLab-x86_64.AppImage) | qualsiasi Linux x86-64 | `chmod +x`, poi doppio clic |
+| [`FractLab-Setup.exe`](https://github.com/OMNIA-AI-Group/FractLab/releases/latest/download/FractLab-Setup.exe) | Windows 10/11 | programma di installazione |
+| [`FractLab-windows-portable.zip`](https://github.com/OMNIA-AI-Group/FractLab/releases/latest/download/FractLab-windows-portable.zip) | Windows 10/11 | estrarre ed eseguire `FractLab\fractlab.exe` |
+| [`FractLab.html`](https://github.com/OMNIA-AI-Group/FractLab/releases/latest/download/FractLab.html) | qualsiasi sistema — Chrome, Edge o Firefox | doppio clic: funziona nel browser, offline, nulla da installare |
 
 ## Compilare dai sorgenti
 
