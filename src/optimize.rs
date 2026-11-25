@@ -106,10 +106,16 @@ pub enum Goal {
     Balanced,
     /// Ondulation de couple en charge minimale (couple moyen conservé).
     MinRipple,
+    /// Spectre du couple de détente le plus étalé : part de la raie dominante minimale.
+    MinDominant,
+    /// Entropie spectrale du couple de détente maximale.
+    MaxEntropy,
+    /// Compromis : spectre étalé et couple de détente faible.
+    SpreadLow,
 }
 
 /// Tous les objectifs proposés.
-pub const ALL_GOALS: [Goal; 5] = [Goal::MinCogging, Goal::MinForce, Goal::MaxEmf, Goal::Balanced, Goal::MinRipple];
+pub const ALL_GOALS: [Goal; 8] = [Goal::MinCogging, Goal::MinForce, Goal::MaxEmf, Goal::Balanced, Goal::MinRipple, Goal::MinDominant, Goal::MaxEntropy, Goal::SpreadLow];
 
 impl Goal {
     /// Nom français (clé de traduction).
@@ -120,6 +126,9 @@ impl Goal {
             Goal::MaxEmf => "FEM maximale",
             Goal::Balanced => "Compromis cogging / force / FEM",
             Goal::MinRipple => "Ondulation de couple minimale",
+            Goal::MinDominant => "Spectre le plus étalé (raie dominante minimale)",
+            Goal::MaxEntropy => "Entropie spectrale maximale",
+            Goal::SpreadLow => "Compromis spectre étalé / cogging faible",
         }
     }
 }
@@ -177,6 +186,12 @@ pub struct Candidate {
     pub b_rotor_t: f64,
     /// Épaisseur de la culasse du rotor de l'essai [mm].
     pub rotor_yoke_mm: f64,
+    /// Part de la raie dominante dans le spectre du couple de détente [%].
+    #[serde(default)]
+    pub dominant_share_pct: f64,
+    /// Entropie spectrale du couple de détente.
+    #[serde(default)]
+    pub entropy: f64,
     /// Couple moyen en charge [N·m].
     pub torque_nm: f64,
     /// Ondulation de couple en charge [%].
@@ -332,6 +347,7 @@ struct Ref {
     emf: f64,
     torque: f64,
     ripple: f64,
+    share: f64,
     b_knee: f64,
 }
 
@@ -354,6 +370,8 @@ fn measure(s: &MotorSpec, values: Vec<f64>) -> Result<Candidate, String> {
         min_gap_deg: gap,
         b_rotor_t: b_rotor,
         rotor_yoke_mm: s.rotor_yoke_th,
+        dominant_share_pct: cg.metrics.dominant_share_pct,
+        entropy: cg.metrics.spectral_entropy,
         torque_nm: tq,
         ripple_pct: rp,
         feasible: true,
@@ -366,7 +384,7 @@ fn evaluate(base: &MotorSpec, st: &Setup, x: &[f64], r: &Ref) -> (Candidate, Vec
         lo + u.clamp(0.0, 1.0) * (hi - lo)
     }).collect();
     let s = apply(base, &st.vars, &values);
-    let bad = Candidate { values: values.clone(), score: 1e9, cogging_mnm: 0.0, force_n: 0.0, emf_v: 0.0, min_gap_deg: 0.0, b_rotor_t: 0.0, rotor_yoke_mm: 0.0, torque_nm: 0.0, ripple_pct: 0.0, feasible: false };
+    let bad = Candidate { values: values.clone(), score: 1e9, cogging_mnm: 0.0, force_n: 0.0, emf_v: 0.0, min_gap_deg: 0.0, b_rotor_t: 0.0, rotor_yoke_mm: 0.0, dominant_share_pct: 0.0, entropy: 0.0, torque_nm: 0.0, ripple_pct: 0.0, feasible: false };
     if s.geometry_problem().is_some() {
         return (bad, vec![Violation::Invalid]);
     }
@@ -380,6 +398,9 @@ fn evaluate(base: &MotorSpec, st: &Setup, x: &[f64], r: &Ref) -> (Candidate, Vec
         Goal::MaxEmf => -e / r.emf.max(1e-9) + 0.3 * (rc - 1.0).max(0.0),
         Goal::Balanced => rc + 0.5 * f / r.force.max(0.1) - e / r.emf.max(1e-9),
         Goal::MinRipple => c.ripple_pct / r.ripple.max(1e-6),
+        Goal::MinDominant => c.dominant_share_pct / 100.0,
+        Goal::MaxEntropy => -c.entropy,
+        Goal::SpreadLow => c.dominant_share_pct / r.share.max(1e-6) + rc,
     };
     // pénalités de contraintes
     let mut pen = 0.0;
@@ -425,7 +446,7 @@ pub fn execute(base: MotorSpec, st: Setup, stop: &AtomicBool, send: &mut dyn FnM
             return;
         }
     };
-    let r = Ref { cog: c0.cogging_mnm, force: c0.force_n, emf: c0.emf_v, torque: c0.torque_nm, ripple: c0.ripple_pct, b_knee: base.saturation.rotor.knee() };
+    let r = Ref { cog: c0.cogging_mnm, force: c0.force_n, emf: c0.emf_v, torque: c0.torque_nm, ripple: c0.ripple_pct, share: c0.dominant_share_pct, b_knee: base.saturation.rotor.knee() };
     send(OptMsg::Event(Event::Reference(c0)));
     let x0: Vec<f64> = st.vars.iter().map(|v| {
         let (lo, hi) = st.bounds(*v, &base);

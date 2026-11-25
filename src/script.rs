@@ -181,6 +181,9 @@ fn goal_of(name: &str) -> Option<Goal> {
         "fem" | "emf" => Goal::MaxEmf,
         "compromis" | "balanced" => Goal::Balanced,
         "ondulation" | "ripple" => Goal::MinRipple,
+        "etale" | "étalé" | "spread" => Goal::MinDominant,
+        "entropie" | "entropy" => Goal::MaxEntropy,
+        "etale_faible" | "spread_low" => Goal::SpreadLow,
         _ => return None,
     })
 }
@@ -227,6 +230,7 @@ pub fn trial_line(t: &Trial, vars: &[Var]) -> String {
     if c.torque_nm != 0.0 {
         l += &format!("  {} {:.1} %", tr("ond."), c.ripple_pct);
     }
+    l += &format!("  dom. {:.1} %  H {:.3}", c.dominant_share_pct, c.entropy);
     if !t.violations.is_empty() {
         let v: Vec<&str> = t.violations.iter().map(|v| tr(v.name())).collect();
         l += &format!("  ✖ {}", v.join(", "));
@@ -275,6 +279,8 @@ fn summary(r: &Results, out: &mut dyn FnMut(Kind, String)) {
     for ((n, u), v) in crate::sweep::OUTPUTS.iter().zip(&o) {
         out(Kind::Result, format!("  {:<34} {:>12} {u}", tr(n), fmt(*v)));
     }
+    out(Kind::Result, format!("  {:<34} {:>12} %", tr("Part de la dominante"), fmt(r.report.cogging.dominant_share_pct)));
+    out(Kind::Result, format!("  {:<34} {:>12}", tr("Entropie spectrale"), fmt(r.report.cogging.spectral_entropy)));
     let sat = &r.sat.no_load;
     out(Kind::Result, format!("  {:<34} {:>5.2} / {:.2} / {:.2} T", tr("Induction dents / culasse stator / culasse rotor"), sat.b_tooth, sat.b_yoke, sat.b_rotor));
     out(Kind::Info, format!("  ({} {:.2} s)", tr("calcul en"), r.seconds));
@@ -405,7 +411,7 @@ fn cmd(c: &mut Ctx, line: &str, out: &mut dyn FnMut(Kind, String), spec_out: &mu
             }
         }
         "ia" | "ai" => {
-            let goal = goal_of(&arg(1)?.to_lowercase()).ok_or_else(|| format!("{} : {} (cogging, force, fem, compromis, ondulation)", tr("objectif inconnu"), words[1]))?;
+            let goal = goal_of(&arg(1)?.to_lowercase()).ok_or_else(|| format!("{} : {} (cogging, force, fem, compromis, ondulation, etale, entropie, etale_faible)", tr("objectif inconnu"), words[1]))?;
             let budget = words.get(2).and_then(|w| w.parse::<usize>().ok()).unwrap_or(120).clamp(10, 5000);
             let vars: Vec<Var> = match words.get(3) {
                 Some(w) if *w != "sat" && !w.starts_with("amin=") => w.split(',').map(|x| var_of(&pname(x)).ok_or_else(|| format!("{} : {x}", tr("variable inconnue")))).collect::<Result<_, _>>()?,
@@ -461,7 +467,7 @@ const HELP: [&str; 13] = [
     "inductance — matrice d'inductances du dernier calcul",
     "balaye arc 0,6 0,9 7 — étude paramétrique",
     "compare — toutes les variantes avec les réglages du projet",
-    "ia cogging 120 arc,amplitude [sat] [amin=2] — Ajustement I.A (cogging, force, fem, compromis, ondulation)",
+    "ia cogging 120 arc,amplitude [sat] [amin=2] — Ajustement I.A (cogging, force, fem, compromis, ondulation, etale, entropie, etale_faible)",
     "applique — reporte le projet du script dans l'interface",
     "initial — revient au projet de départ du script",
     "# … — commentaire",

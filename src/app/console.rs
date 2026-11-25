@@ -224,13 +224,15 @@ impl App {
                         ui.label(RichText::new(h).small().strong());
                     }
                     ui.end_row();
-                    let rows: [(&str, f64, f64, &str, bool); 6] = [
+                    let rows: [(&str, f64, f64, &str, bool); 8] = [
                         ("Cogging pp", r.cogging_mnm, c.cogging_mnm, "mN·m", true),
                         ("Force max", r.force_n, c.force_n, "N", true),
                         ("FEM crête", r.emf_v, c.emf_v, "V", false),
                         ("Couple moyen", r.torque_nm, c.torque_nm, "N·m", false),
                         ("Ondulation", r.ripple_pct, c.ripple_pct, "%", true),
                         ("culasse rotor", r.b_rotor_t, c.b_rotor_t, "T", true),
+                        ("Part de la dominante", r.dominant_share_pct, c.dominant_share_pct, "%", true),
+                        ("Entropie spectrale", r.entropy, c.entropy, "", false),
                     ];
                     for (n, a, v, u, lower_better) in rows {
                         ui.label(t(n));

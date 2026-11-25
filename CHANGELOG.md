@@ -7,13 +7,17 @@ Format : une section par version, la plus récente en premier.
 
 - **Ajustement I.A** : amplitude minimale des décalages réglable quand
   l'amplitude est un réglage libre (empêche l'ajustement de revenir à un
-  rotor régulier) ; commande de script `ia … amin=2`.
+  rotor régulier) ; commande de script `ia … amin=2`. Trois objectifs
+  spectraux : spectre le plus étalé (raie dominante minimale), entropie
+  spectrale maximale, compromis spectre étalé / cogging faible ; part de la
+  dominante et entropie affichées pour chaque essai et dans le bilan.
+- **Paquets** : `FRACTLAB_PRIVE=1 packaging/build_appimage.sh` construit la copie de travail avec le module privé, hors de `dist/`.
 - **Inductance** : banc `examples/inductance_fv.rs` (modèle analytique
   contre volumes finis, tranche par tranche) ; accord à moins de 1 %, avec
   ou sans becs de dents. Le modèle à encoches ouvertes de SIMUMSAP surestime
   l'inductance d'environ 20 % sur des encoches larges (voir docs/MODELE.md).
 
-*English — Minimum offset amplitude for A.I. tuning; inductance checked
+*English — Minimum offset amplitude and three spectral goals (most spread spectrum, maximum entropy, spread/low-cogging trade-off) for A.I. tuning; inductance checked
 against finite volumes (< 1 %); SIMUMSAP's open-slot model overestimates
 inductance by about 20 % on wide slots.*
 
