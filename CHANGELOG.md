@@ -3,7 +3,7 @@
 Format : une section par version, la plus récente en premier.
 *English summary at the end of each section.*
 
-## Prochaine version (en préparation)
+## 0.1.9 — comparaison des solutions, contraintes et objectifs spectraux de l'Ajustement I.A
 
 - **Comparaison des solutions** (après un Ajustement I.A, bouton
   « ⚖ Comparer les solutions » dans la fenêtre de l'ajustement et dans la

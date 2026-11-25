@@ -142,6 +142,8 @@ pub(super) struct CmpIa {
     rec: Option<usize>,
     /// recalcul des graphiques d'une comparaison relue (pas de nouvel enregistrement)
     replay: bool,
+    /// numéro d'ouverture : une nouvelle fenêtre (taille selon l'écran) à chaque comparaison
+    ouverture: u64,
 }
 
 fn col(k: usize) -> Color32 {
@@ -157,9 +159,8 @@ impl CmpIa {
     /// Nouvel ajustement : la comparaison affichée est oubliée, l'historique reste.
     pub(super) fn reset_keep_history(&mut self) {
         let history = self.history.take();
-        let open = self.open;
-        let _ = open;
-        *self = CmpIa { history, ..Default::default() };
+        let ouverture = self.ouverture;
+        *self = CmpIa { history, ouverture, ..Default::default() };
     }
 }
 
@@ -176,7 +177,8 @@ impl App {
             _ => None,
         };
         let history = self.cmpia.history.take();
-        let mut c = CmpIa { open: true, vars: vars.clone(), plot: first, history, ..Default::default() };
+        let ouverture = self.cmpia.ouverture + 1;
+        let mut c = CmpIa { open: true, vars: vars.clone(), plot: first, history, ouverture, ..Default::default() };
         c.when = web_time::SystemTime::now().duration_since(web_time::SystemTime::UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0);
         c.project = base.name.clone();
         c.goal = self.opt_goal.name().to_string();
@@ -333,7 +335,7 @@ impl App {
         }
         let sr = ctx.screen_rect();
         let size = [(sr.width() * 0.94).clamp(900.0, 3000.0), (sr.height() * 0.88).clamp(600.0, 1800.0)];
-        egui::Window::new(format!("⚖ {}", t("Comparaison des solutions"))).open(&mut open).default_size(size).default_pos([sr.left() + sr.width() * 0.03, sr.top() + 30.0]).resizable(true).show(ctx, |ui| {
+        egui::Window::new(format!("⚖ {}", t("Comparaison des solutions"))).id(egui::Id::new(("cmpia_window", self.cmpia.ouverture))).open(&mut open).default_size(size).default_pos([sr.left() + sr.width() * 0.03, sr.top() + 30.0]).resizable(true).show(ctx, |ui| {
             let c = &mut self.cmpia;
             let n = c.specs.len();
             let ready = c.res.iter().filter(|r| r.is_some()).count();
