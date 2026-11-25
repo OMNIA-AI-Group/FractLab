@@ -102,7 +102,7 @@ impl App {
             if ui.button("💾").on_hover_text(t("Sauvegarde générale")).clicked() {
                 self.show_save = true;
             }
-            if ui.add(egui::Button::new(RichText::new(format!("✨ {}", t("Ajustement I.A"))).strong())).on_hover_text(t("Optimise automatiquement les réglages et propose les 5 meilleures solutions")).clicked() {
+            if ui.add(egui::Button::new(RichText::new(format!("✨ {}", t("Ajustement I.A"))).strong().color(Color32::WHITE)).fill(IA_COL)).on_hover_text(t("Optimise automatiquement les réglages et propose les 5 meilleures solutions")).clicked() {
                 self.show_opt = true;
             }
             if ui.button(format!("🖥 {}", t("Console"))).on_hover_text(t("Déroulé du moteur I.A et console de script")).clicked() {

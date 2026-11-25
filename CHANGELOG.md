@@ -3,6 +3,21 @@
 Format : une section par version, la plus récente en premier.
 *English summary at the end of each section.*
 
+## 0.1.11 — confort visuel : comparaison à la demande, arbre de l'I.A, thème clair
+
+- La comparaison des solutions ne s'ouvre plus d'elle-même : bouton orange
+  « Comparer les solutions » (console et onglet Ajustement I.A).
+- Boutons « Ajustement I.A » et « Comparer les solutions » en orange.
+- Arbre de l'I.A : vue fixe par défaut (case « Rotation » pour le faire
+  tourner), cadrage automatique qui remplit la zone, zone agrandie sur
+  grand écran.
+- Thème clair : les rendus 3D, coupes, cartes animées et l'arbre de l'I.A
+  gardent un fond sombre (plus de fond blanc éblouissant).
+
+*English — Solution comparison opens on demand (orange button); orange A.I.
+buttons; A.I. tree fixed view by default with auto-fit; drawing canvases stay
+dark in the light theme.*
+
 ## 0.1.10 — interface professionnelle : espace de travail, annuler, portable et 4K
 
 - **Espace de travail** : Ajustement I.A, console et comparaison des solutions

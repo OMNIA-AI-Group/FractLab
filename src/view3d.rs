@@ -10,12 +10,18 @@ pub static DARK: AtomicBool = AtomicBool::new(true);
 pub fn is_dark() -> bool {
     DARK.load(Ordering::Relaxed)
 }
-/// Couleur de fond des vues graphiques selon le thème.
+/// Les toiles de dessin (moteur 3D, coupes et cartes animées, arbre de
+/// l'I.A) gardent un fond sombre dans les deux thèmes : un fond blanc sous
+/// des rendus lumineux fatigue les yeux, comme dans les logiciels de CAO.
+pub fn canvas_dark() -> bool {
+    true
+}
+/// Couleur de fond des toiles de dessin.
 pub fn bg() -> Color32 {
-    if is_dark() { Color32::from_rgb(10, 14, 24) } else { Color32::from_rgb(244, 247, 251) }
+    Color32::from_rgb(14, 18, 28)
 }
 fn fg() -> Color32 {
-    if is_dark() { Color32::from_rgb(170, 200, 230) } else { Color32::from_rgb(40, 60, 90) }
+    Color32::from_rgb(170, 200, 230)
 }
 /// Texte d'aide affiché en bas des vues 3D (traduit par l'appelant).
 pub static HINT: std::sync::RwLock<String> = std::sync::RwLock::new(String::new());
@@ -225,7 +231,7 @@ pub fn surface_ui(ui: &mut egui::Ui, cam: &mut Camera, s: &Surface, wire: bool) 
 
 fn draw_box(painter: &egui::Painter, cam: &Camera, rect: Rect) {
     let c = [-1.0f32, 1.0];
-    let st = Stroke::new(0.6f32, if is_dark() { Color32::from_rgba_unmultiplied(120, 170, 220, 70) } else { Color32::from_rgba_unmultiplied(40, 80, 140, 90) });
+    let st = Stroke::new(0.6f32, if canvas_dark() { Color32::from_rgba_unmultiplied(120, 170, 220, 70) } else { Color32::from_rgba_unmultiplied(40, 80, 140, 90) });
     for &a in &c {
         for &b in &c {
             let segs = [
@@ -264,9 +270,9 @@ fn draw_axes_labels(
         painter.text(p, egui::Align2::RIGHT_CENTER, format!("{} ", fmt_num(v)), font.clone(), col);
     }
     let (p, _) = cam.project([0.0, -1.3, -0.7], rect);
-    painter.text(p, egui::Align2::CENTER_TOP, &s.x_label, font.clone(), if is_dark() { Color32::from_rgb(90, 200, 255) } else { Color32::from_rgb(0, 110, 170) });
+    painter.text(p, egui::Align2::CENTER_TOP, &s.x_label, font.clone(), if canvas_dark() { Color32::from_rgb(90, 200, 255) } else { Color32::from_rgb(0, 110, 170) });
     let (p, _) = cam.project([1.35, 0.0, -0.7], rect);
-    painter.text(p, egui::Align2::LEFT_CENTER, &s.y_label, font.clone(), if is_dark() { Color32::from_rgb(90, 200, 255) } else { Color32::from_rgb(0, 110, 170) });
+    painter.text(p, egui::Align2::LEFT_CENTER, &s.y_label, font.clone(), if canvas_dark() { Color32::from_rgb(90, 200, 255) } else { Color32::from_rgb(0, 110, 170) });
     let (p, _) = cam.project([-1.0, -1.0, 0.95], rect);
     painter.text(p, egui::Align2::CENTER_BOTTOM, &s.z_label, font, Color32::from_rgb(255, 160, 60));
 }

@@ -576,9 +576,9 @@ Onglet « Ajustement I.A » :
 • Contraintes facultatives : culasse rotor non saturée (épaisseur dimensionnée pour chaque essai), pertes Joule au plus « original + x % », couple moyen au moins « x % de l'original », amplitude minimale des décalages.
 • Chaque essai est un calcul du moteur ; la recherche (Nelder–Mead multi-départs) respecte les contraintes. Les 5 meilleures solutions s'affichent en direct.
 Onglet « Console » (il s'ouvre au lancement) :
-• Moteur I.A : bilan départ → meilleure solution, graphe 3D des possibilités explorées (il tourne ; glisser pour tourner, molette pour zoomer, clic sur un nœud pour le détail et « Appliquer cet essai »), journal des essais en bas (déplier : au moins 5 lignes).
+• Moteur I.A : bilan départ → meilleure solution, graphe 3D des possibilités explorées (il remplit la vue ; case « Rotation » pour le faire tourner, glisser pour tourner, molette pour zoomer, clic sur un nœud pour le détail et « Appliquer cet essai »), journal des essais en bas (déplier : au moins 5 lignes).
 • Script : commandes enchaînées (taper « aide »).
-Onglet « Comparaison des solutions » (il s'ouvre à la fin de l'ajustement) :
+Onglet « Comparaison des solutions » (bouton orange « Comparer les solutions » quand l'ajustement est terminé) :
 • L'original et les propositions sont recalculés en calcul complet ; tableau de 18 métriques avec l'écart à l'original et la meilleure valeur de chaque ligne (★), six graphiques superposés, profil normalisé.
 • « Appliquer » sous la solution choisie, ou « Garder l'original ». Historique des comparaisons, copie du tableau en CSV.",
 "Optimisation step: three tabs in sequence.
@@ -588,9 +588,9 @@ Onglet « Comparaison des solutions » (il s'ouvre à la fin de l'ajustement) :
 • Optional constraints: rotor yoke not saturated (thickness sized for each trial), copper losses at most “original + x %”, mean torque at least “x % of original”, minimum offset amplitude.
 • Each trial is a motor computation; the search (multi-start Nelder–Mead) respects the constraints. The 5 best solutions are shown live.
 “Console” tab (opens when the tuning starts):
-• A.I. engine: start → best summary, 3D graph of the explored possibilities (it rotates; drag to rotate, wheel to zoom, click a node for details and “Apply this trial”), trial log at the bottom (expand: at least 5 lines).
+• A.I. engine: start → best summary, 3D graph of the explored possibilities (it fills the view; “Rotation” box to spin it, drag to rotate, wheel to zoom, click a node for details and “Apply this trial”), trial log at the bottom (expand: at least 5 lines).
 • Script: chained commands (type “help”).
-“Solution comparison” tab (opens at the end of the tuning):
+“Solution comparison” tab (orange “Compare the solutions” button once the tuning is finished):
 • The original and the proposals are fully recomputed; table of 18 metrics with the deviation from the original and the best value of each row (★), six overlaid charts, normalised profile.
 • “Apply” under the chosen solution, or “Keep the original”. Comparison history, table copied as CSV.",
 "Etapa Optimización: tres pestañas encadenadas.
@@ -600,9 +600,9 @@ Pestaña «Ajuste I.A»:
 • Restricciones opcionales: culata del rotor no saturada (espesor dimensionado en cada ensayo), pérdidas Joule como máximo «original + x %», par medio al menos «x % del original», amplitud mínima de desfases.
 • Cada ensayo es un cálculo del motor; la búsqueda (Nelder–Mead multiarranque) respeta las restricciones. Las 5 mejores soluciones se muestran en directo.
 Pestaña «Consola» (se abre al lanzar):
-• Motor I.A: resumen inicio → mejor solución, grafo 3D de las posibilidades exploradas (gira; arrastrar para girar, rueda para el zoom, clic en un nodo para el detalle y «Aplicar este ensayo»), registro de ensayos abajo (desplegar: al menos 5 líneas).
+• Motor I.A: resumen inicio → mejor solución, grafo 3D de las posibilidades exploradas (ocupa la vista; casilla «Rotación» para hacerlo girar, arrastrar para girar, rueda para el zoom, clic en un nodo para el detalle y «Aplicar este ensayo»), registro de ensayos abajo (desplegar: al menos 5 líneas).
 • Script: comandos encadenados (escriba «aide»).
-Pestaña «Comparación de las soluciones» (se abre al terminar el ajuste):
+Pestaña «Comparación de las soluciones» (botón naranja «Comparar las soluciones» cuando termina el ajuste):
 • El original y las propuestas se recalculan con el cálculo completo; tabla de 18 métricas con la desviación respecto al original y el mejor valor de cada fila (★), seis gráficos superpuestos, perfil normalizado.
 • «Aplicar» bajo la solución elegida, o «Conservar el original». Historial de comparaciones, copia de la tabla en CSV.",
 "Schritt Optimierung: drei aufeinanderfolgende Reiter.
@@ -612,9 +612,9 @@ Reiter „KI-Optimierung“:
 • Optionale Nebenbedingungen: Rotorjoch nicht gesättigt (Dicke je Versuch bemessen), Kupferverluste höchstens „Original + x %“, mittleres Moment mindestens „x % des Originals“, minimale Versatzamplitude.
 • Jeder Versuch ist eine Motorberechnung; die Suche (Mehrstart-Nelder–Mead) beachtet die Nebenbedingungen. Die 5 besten Lösungen erscheinen live.
 Reiter „Konsole“ (öffnet sich beim Start):
-• K.I.-Engine: Übersicht Start → beste Lösung, 3D-Graph der erkundeten Möglichkeiten (er dreht sich; ziehen zum Drehen, Mausrad zum Zoomen, Klick auf einen Knoten für Details und „Diesen Versuch übernehmen“), Versuchsprotokoll unten (aufklappen: mindestens 5 Zeilen).
+• K.I.-Engine: Übersicht Start → beste Lösung, 3D-Graph der erkundeten Möglichkeiten (er füllt die Ansicht; Kästchen „Drehung“ zum Drehen, ziehen zum Drehen, Mausrad zum Zoomen, Klick auf einen Knoten für Details und „Diesen Versuch übernehmen“), Versuchsprotokoll unten (aufklappen: mindestens 5 Zeilen).
 • Skript: verkettete Befehle („aide“ eingeben).
-Reiter „Lösungsvergleich“ (öffnet sich am Ende der Abstimmung):
+Reiter „Lösungsvergleich“ (orange Schaltfläche „Lösungen vergleichen“ nach der Abstimmung):
 • Original und Vorschläge werden vollständig neu berechnet; Tabelle mit 18 Kennwerten, Abweichung zum Original und bestem Wert je Zeile (★), sechs überlagerte Diagramme, normiertes Profil.
 • „Übernehmen“ unter der gewählten Lösung oder „Original behalten“. Vergleichsverlauf, Tabelle als CSV kopieren.",
         ],

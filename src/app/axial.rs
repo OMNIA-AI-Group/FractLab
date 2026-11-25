@@ -36,7 +36,7 @@ impl App {
     pub(super) fn geometrie_axiale(&mut self, ui: &mut egui::Ui, spec: &MotorSpec) {
         let lang = self.cfg.lang;
         let t = |k: &'static str| T(lang, k);
-        let dark = view3d::is_dark();
+        let dark = view3d::canvas_dark();
         let th_r = self.theta_r.to_radians();
         let (ri, ro) = (spec.axial.r_in, spec.axial.r_out);
         let q = spec.n_slots;
@@ -352,7 +352,7 @@ impl App {
         let lang = self.cfg.lang;
         let t = |kk: &'static str| T(lang, kk);
         let u = self.cfg.units.clone();
-        let dark = view3d::is_dark();
+        let dark = view3d::canvas_dark();
         let r = self.res.as_ref().unwrap();
         let spec = r.spec.clone();
         let sec = &r.model.sections()[k];

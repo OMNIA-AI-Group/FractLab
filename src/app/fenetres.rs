@@ -348,8 +348,9 @@ impl App {
         if done {
             self.opt_job = None;
             self.status = T(self.cfg.lang, "Ajustement I.A terminé").into();
-            // la comparaison des solutions s'ouvre d'elle-même (le chercheur choisit)
-            if self.demo_inactive() && self.opt_base.is_some() && !self.opt_top.is_empty() && std::env::var("FRACTLAB_SANS_COMPARAISON").is_err() {
+            // la comparaison s'ouvre à la demande (bouton orange) ; ouverture
+            // automatique seulement pour les essais (FRACTLAB_IA=compare)
+            if std::env::var("FRACTLAB_IA").as_deref() == Ok("compare") && self.demo_inactive() && self.opt_base.is_some() && !self.opt_top.is_empty() {
                 self.cmpia_start();
             }
         }
@@ -443,7 +444,7 @@ impl App {
                 if !running
                     && !self.opt_top.is_empty()
                     && self.opt_base.is_some()
-                    && ui.add(egui::Button::new(RichText::new(format!("⚖ {}", t("Comparer les solutions"))).strong().color(Color32::WHITE)).fill(ACTION)).on_hover_text(t("Original et propositions recalculés en calcul complet, métriques et graphiques côte à côte, puis choix de la solution")).clicked()
+                    && ui.add(egui::Button::new(RichText::new(format!("⚖ {}", t("Comparer les solutions"))).strong().color(Color32::WHITE)).fill(IA_COL)).on_hover_text(t("Original et propositions recalculés en calcul complet, métriques et graphiques côte à côte, puis choix de la solution")).clicked()
                 {
                     self.cmpia_start();
                 }

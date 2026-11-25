@@ -273,7 +273,7 @@ impl App {
                 if !running
                     && self.opt_base.is_some()
                     && !self.opt_top.is_empty()
-                    && ui.add(egui::Button::new(RichText::new(format!("⚖ {}", t("Comparer les solutions"))).strong().color(Color32::WHITE)).fill(ACTION)).clicked()
+                    && ui.add(egui::Button::new(RichText::new(format!("⚖ {}", t("Comparer les solutions"))).strong().color(Color32::WHITE)).fill(IA_COL)).clicked()
                 {
                     want_cmp = true;
                 }
@@ -288,7 +288,7 @@ impl App {
         if has_trials {
             // le graphe prend la place visible restante (le journal a son propre panneau en bas)
             let room = ui.clip_rect().bottom() - ui.cursor().top();
-            let h = (room - 40.0).clamp(160.0, 460.0);
+            let h = (room - 40.0).max(160.0);
             if let Some(n) = self.ia_graph(ui, h)
                 && let Some(base) = self.opt_base.clone()
                 && let Some(tr) = self.console.ia.iter().find_map(|e| if let IaLog::Tr(t) = e && t.n == n { Some(t.cand.clone()) } else { None })

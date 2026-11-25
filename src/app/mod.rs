@@ -40,8 +40,10 @@ mod widgets;
 use widgets::*;
 
 const CYAN: Color32 = Color32::from_rgb(0, 200, 255);
-/// Couleur unique des actions principales (Calcul, Comparer, Lancer…).
+/// Couleur unique des actions principales (Calcul, Lancer…).
 const ACTION: Color32 = Color32::from_rgb(0, 110, 160);
+/// Couleur des actions de l'Ajustement I.A (bouton I.A, Comparer les solutions).
+const IA_COL: Color32 = Color32::from_rgb(196, 98, 14);
 const ORANGE: Color32 = Color32::from_rgb(255, 140, 30);
 const SERIES: [Color32; 6] = [
     Color32::from_rgb(0, 200, 255),

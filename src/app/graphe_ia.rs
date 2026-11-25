@@ -27,11 +27,13 @@ pub(super) struct GraphView {
     pub selected: Option<usize>,
     /// Heure d'arrivée de chaque essai (pour l'animation d'apparition) [s].
     pub born: Vec<f64>,
+    /// cadrage automatique lissé : (échelle, centre en unités projetées)
+    pub fit: Option<(f32, egui::Vec2)>,
 }
 
 impl Default for GraphView {
     fn default() -> Self {
-        GraphView { drag: (0.0, 0.0), zoom: 1.0, spin: true, yaw: 0.0, selected: None, born: Vec::new() }
+        GraphView { drag: (0.0, 0.0), zoom: 1.0, spin: false, yaw: 0.0, selected: None, born: Vec::new(), fit: None }
     }
 }
 
@@ -89,7 +91,8 @@ impl App {
     pub(super) fn ia_graph(&mut self, ui: &mut egui::Ui, height: f32) -> Option<usize> {
         let lang = self.cfg.lang;
         let t = |k: &'static str| T(lang, k);
-        let dark = self.cfg.theme == Theme::Sombre;
+        // toile toujours sombre (confort visuel dans les deux thèmes)
+        let dark = view3d::canvas_dark();
         let now = ui.input(|i| i.time);
         let dt = ui.input(|i| i.stable_dt).min(0.1);
         let trials: Vec<&Trial> = self.console.ia.iter().filter_map(|e| if let IaLog::Tr(t) = e { Some(t) } else { None }).collect();
@@ -152,8 +155,39 @@ impl App {
         }
         let yaw = g.yaw + g.drag.0;
         let pitch = 0.35 + g.drag.1;
-        let scale = rect.height().min(rect.width()) * 0.30 * g.zoom;
-        let c = rect.center();
+        // cadrage automatique : l'arbre (et le plancher) remplit ~85 % de la vue,
+        // centré ; lissé pour ne pas « respirer » quand il tourne ou grandit
+        let raw = |p: [f32; 3]| -> (egui::Vec2, f32) {
+            let (sy, cy) = (g.yaw + g.drag.0).sin_cos();
+            let (sp, cp) = (0.35 + g.drag.1).sin_cos();
+            let x = p[0] * cy - p[2] * sy;
+            let z = p[0] * sy + p[2] * cy;
+            let y = -p[1] * cp + z * sp;
+            let zz = p[1] * sp + z * cp;
+            let k = 5.0 / (5.0 + zz);
+            (egui::vec2(x * k, y * k), zz)
+        };
+        let mut lo = egui::vec2(f32::MAX, f32::MAX);
+        let mut hi = egui::vec2(f32::MIN, f32::MIN);
+        let floor = [[-1.0, -1.0, -1.0], [1.0, -1.0, -1.0], [-1.0, -1.0, 1.0], [1.0, -1.0, 1.0]];
+        for p in nodes.iter().map(|n| n.p).chain(floor) {
+            let (q, _) = raw(p);
+            lo = lo.min(q);
+            hi = hi.max(q);
+        }
+        let span = (hi - lo).max(egui::vec2(1e-3, 1e-3));
+        let target = ((rect.width() * 0.85) / span.x).min((rect.height() * 0.85) / span.y);
+        let mid = (lo + hi) * 0.5;
+        let (fs, fc) = match g.fit {
+            Some((s0, c0)) => (s0 + (target - s0) * 0.15, c0 + (mid - c0) * 0.15),
+            None => (target, mid),
+        };
+        if (fs - target).abs() > 0.5 || (fc - mid).length() > 1e-3 {
+            ui.ctx().request_repaint();
+        }
+        g.fit = Some((fs, fc));
+        let scale = fs * g.zoom;
+        let c = rect.center() - fc * scale;
         let project = |p: [f32; 3]| -> (egui::Pos2, f32) {
             let (sy, cy) = yaw.sin_cos();
             let (sp, cp) = pitch.sin_cos();

@@ -258,7 +258,7 @@ impl App {
             let sc = rect.width().min(rect.height()) * 0.46 / r_out * self.geo_view.zoom;
             let c = rect.center() + self.geo_view.pan;
             let to = |r: f64, th: f64| c + Vec2::new((r * th.cos()) as f32 * sc, -(r * th.sin()) as f32 * sc);
-            let iron = if view3d::is_dark() { Color32::from_rgb(85, 95, 115) } else { Color32::from_rgb(150, 160, 175) };
+            let iron = if view3d::canvas_dark() { Color32::from_rgb(85, 95, 115) } else { Color32::from_rgb(150, 160, 175) };
             let q = spec.n_slots;
             let mut mesh = egui::epaint::Mesh::default();
             stator_mesh(&mut mesh, &to, &rg, q, iron);
@@ -297,7 +297,7 @@ impl App {
             for (k, a) in angles.iter().enumerate() {
                 let th = a.to_radians() + th_r;
                 let pos = to(rg.rotor_yoke.1 + (rg.rotor_yoke.1 - rg.rotor_yoke.0) * 0.8, th);
-                painter.text(pos, egui::Align2::CENTER_CENTER, format!("{}", k + 1), egui::FontId::proportional(11.0), if view3d::is_dark() { Color32::LIGHT_GRAY } else { Color32::DARK_GRAY });
+                painter.text(pos, egui::Align2::CENTER_CENTER, format!("{}", k + 1), egui::FontId::proportional(11.0), if view3d::canvas_dark() { Color32::LIGHT_GRAY } else { Color32::DARK_GRAY });
                 if let Some(h) = hp
                     && h.distance(to(0.5 * (spec.r_magnet_in() + spec.r_magnet_out()), th)) < (spec.magnet_th * 1e-3) as f32 * sc {
                         hovered_txt = Some(format!(
@@ -411,7 +411,7 @@ impl App {
         let c = rect.center() - Vec2::new(40.0, 0.0) + self.map_view.pan;
         let to = |r: f64, th: f64| c + Vec2::new((r * th.cos()) as f32 * sc, -(r * th.sin()) as f32 * sc);
         let bmax = 2.5f64;
-        let iron = if view3d::is_dark() { Color32::from_rgb(60, 66, 80) } else { Color32::from_rgb(175, 182, 195) };
+        let iron = if view3d::canvas_dark() { Color32::from_rgb(60, 66, 80) } else { Color32::from_rgb(175, 182, 195) };
         let mut mesh = egui::epaint::Mesh::default();
         sector(&mut mesh, &to, rg.yoke.0, rg.yoke.1, 0.0, 2.0 * PI, iron, 180);
         sector(&mut mesh, &to, rg.rotor_yoke.0, rg.rotor_yoke.1, 0.0, 2.0 * PI, iron, 180);
@@ -443,7 +443,7 @@ impl App {
         // lignes de flux : isovaleurs de A (carrés marchants)
         let (amin, amax) = fm.a.iter().flatten().fold((f64::MAX, f64::MIN), |(a, b), &v| (a.min(v), b.max(v)));
         let nlev = 18;
-        let stroke = egui::Stroke::new(0.7f32, if view3d::is_dark() { Color32::from_white_alpha(110) } else { Color32::from_black_alpha(120) });
+        let stroke = egui::Stroke::new(0.7f32, if view3d::canvas_dark() { Color32::from_white_alpha(110) } else { Color32::from_black_alpha(120) });
         for lv in 1..nlev {
             let level = amin + (amax - amin) * lv as f64 / nlev as f64;
             for i in 0..nr - 1 {
