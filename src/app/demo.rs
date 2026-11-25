@@ -40,6 +40,9 @@ pub(super) struct DemoRun {
     t0: f64,
     caption: String,
     typed: usize,
+    /// action de l'étape déjà lancée (calcul, ajustement) : ne dépend pas de la
+    /// durée de la première image (une vue 3D lente la faisait rater)
+    started: bool,
 }
 
 /// Fenêtres et état de la démo.
@@ -135,7 +138,7 @@ impl App {
         self.console.open = false;
         self.show_opt = false;
         self.demo.ended = false;
-        self.demo.run = Some(DemoRun { key, steps: steps_for(key), idx: 0, t0: ctx.input(|i| i.time), caption: String::new(), typed: 0 });
+        self.demo.run = Some(DemoRun { key, steps: steps_for(key), idx: 0, t0: ctx.input(|i| i.time), caption: String::new(), typed: 0, started: false });
     }
 
     /// Arrête la démo (Échap) : propose de revenir au projet mis de côté.
@@ -211,7 +214,8 @@ impl App {
             Step::Compute => {
                 widgets::set_demo_focus(None);
                 run.caption = T(lang, "Calcul du moteur complet…").to_string();
-                if dt < 0.1 {
+                if !run.started {
+                    run.started = true;
                     self.launch();
                 } else if self.job.is_none() && !self.dirty && dt > 1.5 {
                     next = true;
@@ -232,7 +236,12 @@ impl App {
             }
             Step::Ia => {
                 run.caption = T(lang, "Ajustement I.A : chaque essai est un calcul complet ; le graphe montre les possibilités explorées.").to_string();
-                if dt < 0.1 && self.opt_job.is_none() {
+                let first = !run.started;
+                run.started = true;
+                if first && std::env::var("FRACTLAB_DEMO_TRACE").is_ok() {
+                    eprintln!("DÉMO ajustement I.A lancé");
+                }
+                if first && self.opt_job.is_none() {
                     let vars = vec![crate::optimize::Var::ArcRatio, crate::optimize::Var::SlotOpen];
                     self.opt_base = Some(self.spec.clone());
                     self.opt_vars_run = vars.clone();
@@ -253,10 +262,24 @@ impl App {
             }
         }
         if next {
+            if std::env::var("FRACTLAB_DEMO_TRACE").is_ok() {
+                let kind = match step {
+                    Step::Say(..) => "légende",
+                    Step::Field(l, ..) => l,
+                    Step::Topo(_) => "type de machine",
+                    Step::Tab(..) => "onglet",
+                    Step::Compute => "calcul",
+                    Step::Field3d(_) => "moteur 3D",
+                    Step::Ia => "ajustement I.A",
+                    Step::End => "fin",
+                };
+                eprintln!("DÉMO {:.1} s étape {} : {kind}", now, self.demo.run.as_ref().map_or(0, |r| r.idx));
+            }
             let run = self.demo.run.as_mut().unwrap();
             run.idx += 1;
             run.t0 = now;
             run.typed = 0;
+            run.started = false;
         }
     }
 

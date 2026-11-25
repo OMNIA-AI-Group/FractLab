@@ -83,7 +83,7 @@ impl App {
         ui.horizontal_wrapped(|ui| {
             let busy = self.job.is_some();
             if ui
-                .add_enabled(!busy, egui::Button::new(RichText::new(format!("▶ {}", t("Calcul"))).strong()).fill(Color32::from_rgb(0, 110, 160)))
+                .add_enabled(!busy, egui::Button::new(RichText::new(format!("▶ {}", t("Calcul"))).strong()).fill(ACTION))
                 .on_hover_text(crate::tips::tip(lang, "Calcul").unwrap_or_default())
                 .clicked()
             {
@@ -102,7 +102,7 @@ impl App {
             if ui.button("💾").on_hover_text(t("Sauvegarde générale")).clicked() {
                 self.show_save = true;
             }
-            if ui.add(egui::Button::new(RichText::new(format!("✨ {}", t("Ajustement I.A"))).strong()).fill(Color32::from_rgb(140, 70, 0))).on_hover_text(t("Optimise automatiquement les réglages et propose les 5 meilleures solutions")).clicked() {
+            if ui.add(egui::Button::new(RichText::new(format!("✨ {}", t("Ajustement I.A"))).strong())).on_hover_text(t("Optimise automatiquement les réglages et propose les 5 meilleures solutions")).clicked() {
                 self.show_opt = true;
             }
             if ui.button(format!("🖥 {}", t("Console"))).on_hover_text(t("Déroulé du moteur I.A et console de script")).clicked() {

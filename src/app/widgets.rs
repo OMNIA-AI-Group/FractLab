@@ -86,11 +86,12 @@ pub(super) fn vignette(ui: &mut egui::Ui, title: &str, data: &[f64], bars: bool,
     let dark = view3d::is_dark();
     let base = if dark { Color32::from_rgb(20, 28, 46) } else { Color32::from_rgb(236, 242, 250) };
     p.rect_filled(rect, 10.0, base);
-    let accent = if is_new { ORANGE.gamma_multiply(0.3 + 0.7 * pulse) } else if resp.hovered() { CYAN } else { CYAN.gamma_multiply(0.35) };
-    p.rect_stroke(rect, 10.0, egui::Stroke::new(if is_new { 2.5f32 } else { 1.2f32 }, accent));
+    let _ = pulse;
+    let accent = if resp.hovered() { CYAN } else if is_new { ORANGE.gamma_multiply(0.75) } else { CYAN.gamma_multiply(0.35) };
+    p.rect_stroke(rect, 10.0, egui::Stroke::new(if is_new { 1.6f32 } else { 1.2f32 }, accent));
     p.text(rect.left_top() + Vec2::new(8.0, 6.0), egui::Align2::LEFT_TOP, title, egui::FontId::proportional(12.5), if dark { Color32::from_gray(220) } else { Color32::from_gray(40) });
     if is_new {
-        p.text(rect.right_top() + Vec2::new(-8.0, 6.0), egui::Align2::RIGHT_TOP, tr("nouveau"), egui::FontId::proportional(10.0), ORANGE.gamma_multiply(0.4 + 0.6 * pulse));
+        p.text(rect.right_top() + Vec2::new(-8.0, 6.0), egui::Align2::RIGHT_TOP, tr("nouveau"), egui::FontId::proportional(10.0), ORANGE.gamma_multiply(0.85));
     }
     let plot = egui::Rect::from_min_max(rect.left_top() + Vec2::new(8.0, 26.0), rect.right_bottom() - Vec2::new(8.0, 8.0));
     if data.len() >= 2 {

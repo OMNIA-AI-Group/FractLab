@@ -17,6 +17,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::f64::consts::PI;
 
+mod accueil;
 mod axial;
 mod champ3d;
 mod comparaison_ia;
@@ -39,6 +40,8 @@ mod widgets;
 use widgets::*;
 
 const CYAN: Color32 = Color32::from_rgb(0, 200, 255);
+/// Couleur unique des actions principales (Calcul, Comparer, Lancer…).
+const ACTION: Color32 = Color32::from_rgb(0, 110, 160);
 const ORANGE: Color32 = Color32::from_rgb(255, 140, 30);
 const SERIES: [Color32; 6] = [
     Color32::from_rgb(0, 200, 255),
@@ -79,11 +82,14 @@ pub struct Config {
     /// projets récents (chemins)
     #[serde(default)]
     pub recent: Vec<String>,
+    /// l'accueil du premier lancement a été vu (« ne plus afficher »)
+    #[serde(default)]
+    pub welcomed: bool,
 }
 
 impl Default for Config {
     fn default() -> Self {
-        Config { lang: Lang::Fr, theme: Theme::Sombre, units: Units::default(), last_project: None, ui_scale: 0.0, seen_field3d: false, recent: Vec::new() }
+        Config { lang: Lang::Fr, theme: Theme::Sombre, units: Units::default(), last_project: None, ui_scale: 0.0, seen_field3d: false, recent: Vec::new(), welcomed: false }
     }
 }
 
@@ -307,6 +313,9 @@ pub struct App {
     step_tab: [Option<Tab>; 4],
     /// recherche dans le panneau des paramètres
     param_search: String,
+    /// fenêtre d'accueil affichée / case « ne plus afficher »
+    welcome: bool,
+    welcome_never: bool,
     /// fiche du projet SIMUMSAP ouvert (champs, inductances de référence, dossier)
     simu: Option<(Vec<(String, String)>, Option<Vec<Vec<f64>>>, std::path::PathBuf)>,
     /// figures MATLAB chargées : (fichier, axes)
@@ -437,6 +446,7 @@ impl App {
     /// Crée l'application : préférences, dernier projet, options de lancement.
     pub fn new(cc: &eframe::CreationContext<'_>) -> App {
         let cfg = Config::load();
+        let welcomed = cfg.welcomed;
         apply_theme(&cc.egui_ctx, cfg.theme);
         let logo_tex = load_png(&cc.egui_ctx, "logo", include_bytes!("../../assets/logo.png"));
         // dernier projet : fichier sur ordinateur, stockage du navigateur sinon
@@ -568,6 +578,9 @@ impl App {
             hist: Default::default(),
             step_tab: [None; 4],
             param_search: std::env::var("FRACTLAB_RECHERCHE").unwrap_or_default(),
+            // premier lancement (les lancements d'essai FRACTLAB_… ne l'affichent pas)
+            welcome: std::env::var("FRACTLAB_ACCUEIL").is_ok() || (!welcomed && !std::env::vars().any(|(k, _)| k.starts_with("FRACTLAB_") && k != "FRACTLAB_PUBLIC" && k != "FRACTLAB_PRIVE")),
+            welcome_never: true,
             demo: demo::DemoState {
                 pending: std::env::var("FRACTLAB_DEMO").ok().and_then(|k| crate::demo::MOTORS.iter().find(|m| m.key == k).map(|m| m.key)),
                 confirm: std::env::var("FRACTLAB_DEMO").as_deref() == Ok("choix"),
@@ -961,6 +974,7 @@ impl eframe::App for App {
         self.demo_windows(ctx);
         self.cmpia_poll(ctx);
         self.changes_window(ctx);
+        self.welcome_window(ctx);
         if self.show_redac {
             self.redac_window(ctx);
         }

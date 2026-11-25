@@ -415,7 +415,7 @@ impl App {
             });
             ui.horizontal(|ui| {
                 if !running {
-                    if ui.add(egui::Button::new(RichText::new(format!("▶ {}", t("Lancer l'ajustement"))).strong())).clicked() {
+                    if ui.add(egui::Button::new(RichText::new(format!("▶ {}", t("Lancer l'ajustement"))).strong().color(Color32::WHITE)).fill(ACTION)).clicked() {
                         let vars: Vec<op::Var> = self.opt_vars.iter().filter(|(_, on)| *on).map(|(v, _)| *v).collect();
                         if !vars.is_empty() {
                             self.opt_base = Some(self.spec.clone());
@@ -443,7 +443,7 @@ impl App {
                 if !running
                     && !self.opt_top.is_empty()
                     && self.opt_base.is_some()
-                    && ui.add(egui::Button::new(RichText::new(format!("⚖ {}", t("Comparer les solutions"))).strong().color(Color32::WHITE)).fill(Color32::from_rgb(0, 120, 90))).on_hover_text(t("Original et propositions recalculés en calcul complet, métriques et graphiques côte à côte, puis choix de la solution")).clicked()
+                    && ui.add(egui::Button::new(RichText::new(format!("⚖ {}", t("Comparer les solutions"))).strong().color(Color32::WHITE)).fill(ACTION)).on_hover_text(t("Original et propositions recalculés en calcul complet, métriques et graphiques côte à côte, puis choix de la solution")).clicked()
                 {
                     self.cmpia_start();
                 }

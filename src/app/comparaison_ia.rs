@@ -392,7 +392,7 @@ impl App {
                     ui.label(t("Lancez un Ajustement I.A : à la fin, cette fenêtre s'ouvre seule avec le moteur original et les meilleures propositions, métriques et graphiques côte à côte."));
                     ui.label(RichText::new(t("Ou choisissez une comparaison précédente dans l'historique ci-dessus.")).weak());
                     ui.add_space(10.0);
-                    if ui.add(egui::Button::new(RichText::new(format!("✨ {}", t("Lancer un Ajustement I.A"))).strong().size(16.0).color(Color32::WHITE)).fill(Color32::from_rgb(140, 70, 0)).min_size(egui::vec2(0.0, 34.0))).clicked() {
+                    if ui.add(egui::Button::new(RichText::new(format!("✨ {}", t("Lancer un Ajustement I.A"))).strong().size(16.0).color(Color32::WHITE)).fill(ACTION).min_size(egui::vec2(0.0, 34.0))).clicked() {
                         open_ia = true;
                     }
                 });
@@ -512,7 +512,7 @@ impl App {
                     ui.label("");
                     ui.label("");
                     for k in 0..n {
-                        let (label, fill) = if k == 0 { (format!("↺ {}", t("Garder l'original")), Color32::from_rgb(70, 70, 80)) } else { (format!("✔ {}", t("Appliquer")), Color32::from_rgb(0, 110, 160)) };
+                        let (label, fill) = if k == 0 { (format!("↺ {}", t("Garder l'original")), Color32::from_rgb(70, 70, 80)) } else { (format!("✔ {}", t("Appliquer")), ACTION) };
                         if ui.add_enabled(c.metrics[k].iter().any(|v| v.is_some()), egui::Button::new(RichText::new(label).strong().color(Color32::WHITE)).fill(fill)).clicked() {
                             apply = Some(k);
                         }

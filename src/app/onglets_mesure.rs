@@ -9,6 +9,7 @@ impl App {
         let lang = self.cfg.lang;
         let t = |k: &'static str| T(lang, k);
         let br_spark: Vec<f64> = self.field().map(|(_, g)| g.br.iter().step_by(4).cloned().collect()).unwrap_or_default();
+        let quality = self.quality_info();
         let r = self.res.as_ref().unwrap();
         let rep = &r.report;
         let crit = crate::repartition::criteria();
@@ -53,6 +54,9 @@ impl App {
                     if ui.add(egui::Image::new((l.id(), Vec2::new(240.0, 134.0))).rounding(8.0).sense(egui::Sense::click())).on_hover_text(tr("Développeur de l'application")).on_hover_cursor(egui::CursorIcon::PointingHand).clicked() {
                         self.show_author = true;
                     }
+                }
+                if let Some((ok, total, tip)) = &quality {
+                    super::criteres::draw_quality(ui, *ok, *total, tip);
                 }
                 ui.vertical(|ui| {
                     ui.heading(RichText::new(format!("{} — {}", rep.variant, t("tableau de bord"))).strong());

@@ -36,6 +36,40 @@ struct Crit {
 
 impl App {
     /// Critères non tenus du projet courant.
+    /// Nombre de critères évalués pour le projet (mêmes conditions que
+    /// `failed_criteria`) : faisabilité, saturation, et chaque seuil connu.
+    fn evaluated_criteria(&self) -> usize {
+        let Some(r) = &self.res else { return 0 };
+        let rep = &r.report;
+        let crit = crate::repartition::criteria();
+        let b0 = crit.cogging_target.and_then(|(n, _)| self.cmp.iter().find(|c| c.name == n)).is_some();
+        2 + usize::from(b0 && crit.cogging_target.is_some())
+            + usize::from(crit.force_max_n.is_some())
+            + usize::from(crit.balourd_max_mg_cm.is_some())
+            + usize::from(rep.autocorr_max.is_some() && crit.autocorr_max.is_some())
+            + usize::from(crit.thd_max_pct.is_some())
+    }
+
+    /// Jauge « qualité de conception » : (critères tenus, évalués, détail).
+    pub(super) fn quality_info(&self) -> Option<(usize, usize, String)> {
+        let lang = self.cfg.lang;
+        let t = |k: &'static str| T(lang, k);
+        let total = self.evaluated_criteria();
+        if total == 0 {
+            return None;
+        }
+        let failed = self.failed_criteria();
+        let ok = total.saturating_sub(failed.len());
+        let mut tip = format!("{} : {ok} / {total} {}", t("Qualité de conception"), t("critères tenus"));
+        for f in &failed {
+            tip += &format!("\n✖ {} — {} ({} {})", t(f.name), f.value, t("seuil"), f.threshold);
+        }
+        if failed.is_empty() {
+            tip += &format!("\n✔ {}", t("tous les critères sont tenus"));
+        }
+        Some((ok, total, tip))
+    }
+
     fn failed_criteria(&self) -> Vec<Crit> {
         let lang = self.cfg.lang;
         let t = |k: &'static str| T(lang, k);
@@ -272,4 +306,29 @@ mod tests {
         let manq: Vec<&String> = keys.iter().filter(|k| !crate::i18n::TABLE.iter().any(|(f, _, _, _)| f == k)).collect();
         assert!(manq.is_empty(), "{manq:#?}");
     }
+}
+
+/// Dessine la jauge de qualité de conception (anneau + « tenus / évalués »).
+pub(super) fn draw_quality(ui: &mut egui::Ui, ok: usize, total: usize, tip: &str) {
+    let frac = ok as f32 / total.max(1) as f32;
+    let col = if ok == total { badge(true) } else if frac >= 0.5 { ORANGE } else { badge(false) };
+    let size = 64.0;
+    let (rect, resp) = ui.allocate_exact_size(egui::vec2(size, size), egui::Sense::hover());
+    let p = ui.painter();
+    let c = rect.center();
+    let rad = size * 0.42;
+    let ring = |from: f32, to: f32, color: Color32, w: f32| {
+        let n = 48;
+        let pts: Vec<egui::Pos2> = (0..=n).map(|k| {
+            let a = -std::f32::consts::FRAC_PI_2 + std::f32::consts::TAU * (from + (to - from) * k as f32 / n as f32);
+            c + egui::vec2(a.cos(), a.sin()) * rad
+        }).collect();
+        p.add(egui::Shape::line(pts, egui::Stroke::new(w, color)));
+    };
+    ring(0.0, 1.0, ui.visuals().widgets.noninteractive.bg_stroke.color, 7.0);
+    if frac > 0.0 {
+        ring(0.0, frac, col, 7.0);
+    }
+    p.text(c, egui::Align2::CENTER_CENTER, format!("{ok}/{total}"), egui::FontId::proportional(15.0), col);
+    resp.on_hover_text(tip);
 }

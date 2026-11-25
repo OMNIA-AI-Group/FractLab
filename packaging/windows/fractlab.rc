@@ -1,7 +1,7 @@
 1 ICON "fractlab.ico"
 1 VERSIONINFO
-FILEVERSION 0,1,9,0
-PRODUCTVERSION 0,1,9,0
+FILEVERSION 0,1,10,0
+PRODUCTVERSION 0,1,10,0
 BEGIN
   BLOCK "StringFileInfo"
   BEGIN
@@ -9,12 +9,12 @@ BEGIN
     BEGIN
       VALUE "CompanyName", "OmegaiA-Group"
       VALUE "FileDescription", "FractLab - Magnetic Engine Simulator"
-      VALUE "FileVersion", "0.1.9"
+      VALUE "FileVersion", "0.1.10"
       VALUE "InternalName", "fractlab"
       VALUE "LegalCopyright", "Alain VALETTE-CLARY - GPL-3.0-or-later"
       VALUE "OriginalFilename", "fractlab.exe"
       VALUE "ProductName", "FractLab"
-      VALUE "ProductVersion", "0.1.9"
+      VALUE "ProductVersion", "0.1.10"
     END
   END
   BLOCK "VarFileInfo"

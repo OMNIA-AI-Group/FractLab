@@ -72,6 +72,48 @@ Browser-Version (Datei FractLab.html oder online): gleiche Funktionen; die Berec
         ],
     },
     Section {
+        icon: "🧭",
+        title: ["Espace de travail et gestion du projet", "Workspace and project management", "Espacio de trabajo y gestión del proyecto", "Arbeitsbereich und Projektverwaltung"],
+        body: [
+"Les vues sont rangées par étape d'étude, dans la barre du haut : Conception (Synthèse, Géométrie, Moteur 3D), Analyse (Champ, Cogging, FEM, Forces, Charge, Dynamique, Cartes 3D), Optimisation (Ajustement I.A, Console, Comparaison des solutions, Paramétrique), Validation. Chaque étape retient le dernier onglet ouvert.
+Projet :
+• Annuler / rétablir : boutons ⟲ ⟳, menu Édition, Ctrl+Z et Ctrl+Y (ou Ctrl+Maj+Z). Les saisies rapprochées comptent pour une seule annulation.
+• « ● modifié » sous le titre (et dans le titre de la fenêtre) : le projet diffère du fichier enregistré ; un clic liste les modifications (valeur enregistrée → valeur actuelle). Même liste par Édition > Modifications depuis l'enregistrement.
+• Fichier > Projets récents : les 8 derniers projets ouverts ou enregistrés.
+• Loupe en haut du panneau de gauche : tapez une partie du nom d'un paramètre ; les champs trouvés sont encadrés en jaune, la vue va au premier et les sections se déplient.
+Jauge de qualité de conception (Synthèse, à côté du titre) : critères tenus sur critères évalués ; le survol détaille ceux qui ne le sont pas.
+Au premier lancement, l'accueil présente les étapes et propose la démo guidée.
+L'interface s'adapte à l'écran : sur un portable, la comparaison des solutions place le tableau au-dessus des graphiques ; sur un écran 4K, le zoom monte automatiquement (réglable dans les Préférences).",
+"Views are organised by study step in the top bar: Design (Summary, Geometry, 3D motor), Analysis (Field, Cogging, Back-EMF, Forces, Load, Dynamics, 3D maps), Optimisation (A.I. tuning, Console, Solution comparison, Parametric), Validation. Each step remembers its last open tab.
+Project:
+• Undo / redo: ⟲ ⟳ buttons, Edit menu, Ctrl+Z and Ctrl+Y (or Ctrl+Shift+Z). Quick successive edits count as a single undo.
+• “● modified” under the title (and in the window title): the project differs from the saved file; a click lists the changes (saved value → current value). Same list via Edit > Changes since last save.
+• File > Recent projects: the last 8 projects opened or saved.
+• Magnifier at the top of the left panel: type part of a parameter name; matching fields are framed in yellow, the view jumps to the first one and sections expand.
+Design-quality gauge (Summary, next to the title): criteria met over criteria evaluated; hovering details those that are not met.
+At first launch, the welcome window presents the steps and offers the guided demo.
+The interface adapts to the screen: on a laptop, the solution comparison puts the table above the charts; on a 4K screen, the zoom rises automatically (adjustable in Preferences).",
+"Las vistas se ordenan por etapa del estudio en la barra superior: Diseño (Resumen, Geometría, Motor 3D), Análisis (Campo, Cogging, FCEM, Fuerzas, Carga, Dinámica, Mapas 3D), Optimización (Ajuste I.A, Consola, Comparación de las soluciones, Paramétrico), Validación. Cada etapa recuerda la última pestaña abierta.
+Proyecto:
+• Deshacer / rehacer: botones ⟲ ⟳, menú Edición, Ctrl+Z y Ctrl+Y (o Ctrl+Mayús+Z). Las ediciones seguidas cuentan como una sola.
+• «● modificado» bajo el título (y en el título de la ventana): el proyecto difiere del archivo guardado; un clic lista los cambios (valor guardado → valor actual). Misma lista en Edición > Cambios desde el guardado.
+• Archivo > Proyectos recientes: los 8 últimos proyectos abiertos o guardados.
+• Lupa arriba del panel izquierdo: escriba parte del nombre de un parámetro; los campos encontrados se enmarcan en amarillo, la vista va al primero y las secciones se despliegan.
+Indicador de calidad del diseño (Resumen, junto al título): criterios cumplidos sobre criterios evaluados; al pasar el ratón se detallan los no cumplidos.
+En el primer inicio, la bienvenida presenta las etapas y propone la demo guiada.
+La interfaz se adapta a la pantalla: en un portátil, la comparación de soluciones pone la tabla encima de los gráficos; en una pantalla 4K, el zoom sube automáticamente (ajustable en Preferencias).",
+"Die Ansichten sind in der oberen Leiste nach Studienschritten geordnet: Entwurf (Übersicht, Geometrie, 3D-Motor), Analyse (Feld, Rastmoment, EMK, Kräfte, Last, Dynamik, 3D-Karten), Optimierung (KI-Optimierung, Konsole, Lösungsvergleich, Parameterstudie), Validierung. Jeder Schritt merkt sich den zuletzt geöffneten Reiter.
+Projekt:
+• Rückgängig / Wiederholen: Schaltflächen ⟲ ⟳, Menü Bearbeiten, Strg+Z und Strg+Y (oder Strg+Umschalt+Z). Schnell aufeinanderfolgende Eingaben zählen als ein Schritt.
+• „● geändert“ unter dem Titel (und im Fenstertitel): Das Projekt weicht von der gespeicherten Datei ab; ein Klick listet die Änderungen (gespeicherter Wert → aktueller Wert). Dieselbe Liste unter Bearbeiten > Änderungen seit dem Speichern.
+• Datei > Zuletzt verwendete Projekte: die 8 zuletzt geöffneten oder gespeicherten Projekte.
+• Lupe oben in der linken Leiste: Teil eines Parameternamens eingeben; gefundene Felder werden gelb umrahmt, die Ansicht springt zum ersten, die Abschnitte klappen auf.
+Anzeige der Entwurfsqualität (Übersicht, neben dem Titel): erfüllte von bewerteten Kriterien; beim Überfahren werden die nicht erfüllten erläutert.
+Beim ersten Start stellt die Begrüßung die Schritte vor und bietet die geführte Demo an.
+Die Oberfläche passt sich dem Bildschirm an: auf einem Laptop steht beim Lösungsvergleich die Tabelle über den Diagrammen; auf einem 4K-Bildschirm steigt der Zoom automatisch (in den Einstellungen änderbar).",
+        ],
+    },
+    Section {
         icon: "▶",
         title: ["Démo", "Demo", "Demo", "Demo"],
         body: [
@@ -525,32 +567,56 @@ Exzentrizität (Reiter Kräfte): Exzentrizität ε (statisch oder dynamisch) ein
     },
     Section {
         icon: "✨",
-        title: ["Ajustement I.A", "A.I. tuning", "Ajuste I.A", "KI-Optimierung"],
+        title: ["Ajustement I.A, console et comparaison des solutions", "A.I. tuning, console and solution comparison", "Ajuste I.A, consola y comparación de soluciones", "KI-Optimierung, Konsole und Lösungsvergleich"],
         body: [
-"Le bouton « Ajustement I.A » (panneau de gauche) cherche automatiquement les meilleurs réglages du moteur.
-• Choisissez l'objectif : couple de détente minimal, force radiale minimale, FEM maximale, ou compromis cogging / force / FEM.
-• Cochez les réglages libres (arc des aimants, ouverture d'encoche, épaisseur des aimants, amplitude des décalages, becs de dents, entrefer), le nombre d'essais et la part de FEM à conserver.
-• Chaque essai est un calcul complet du moteur ; la recherche (optimisation numérique multi-départs de type Nelder–Mead) respecte les contraintes : aimants sans chevauchement, balourd, FEM minimale.
-• Les 5 meilleures solutions distinctes s'affichent en direct avec leurs performances ; « Appliquer » reporte celle de votre choix dans le projet. La courbe montre la progression du meilleur score.
-• « Appliquer en direct la meilleure proposition » (activé par défaut) : chaque fois qu'une meilleure solution apparaît, elle est appliquée au projet et toutes les vues (courbes, 3D, comparaison, étude paramétrique…) se mettent à jour pendant la recherche. « ↺ Revenir au projet initial » annule tout.",
-"The “A.I. tuning” button (left panel) automatically searches for the best motor settings.
-• Choose the goal: minimum cogging torque, minimum radial force, maximum back-EMF, or cogging / force / back-EMF trade-off.
-• Tick the free settings (magnet arc, slot opening, magnet thickness, offset amplitude, tooth tips, air gap), the number of trials and the share of back-EMF to keep.
-• Each trial is a full motor computation; the search (multi-start Nelder–Mead numerical optimisation) respects the constraints: no overlapping magnets, unbalance, minimum back-EMF.
-• The 5 best distinct solutions are shown live with their performance; “Apply” copies the chosen one into the project. The curve shows the progress of the best score.
-• “Apply the best proposal live” (on by default): each time a better solution appears it is applied to the project and every view (curves, 3D, comparison, parametric study…) updates during the search. “↺ Back to the initial project” undoes everything.",
-"El botón «Ajuste I.A» (panel izquierdo) busca automáticamente los mejores ajustes del motor.
-• Elija el objetivo: par de cogging mínimo, fuerza radial mínima, FCEM máxima o compromiso cogging / fuerza / FCEM.
-• Marque los ajustes libres (arco de imanes, apertura de ranura, espesor de imanes, amplitud de desfases, picos de diente, entrehierro), el número de ensayos y la parte de FCEM a conservar.
-• Cada ensayo es un cálculo completo del motor; la búsqueda (optimización numérica multiarranque tipo Nelder–Mead) respeta las restricciones: imanes sin solapamiento, desequilibrio, FCEM mínima.
-• Las 5 mejores soluciones distintas se muestran en directo con sus prestaciones; «Aplicar» lleva la elegida al proyecto. La curva muestra la progresión de la mejor puntuación.
-• «Aplicar en directo la mejor propuesta» (activado por defecto): cada vez que aparece una solución mejor se aplica al proyecto y todas las vistas (curvas, 3D, comparación, estudio paramétrico…) se actualizan durante la búsqueda. «↺ Volver al proyecto inicial» lo deshace todo.",
-"Die Schaltfläche „KI-Optimierung“ (linke Leiste) sucht automatisch die besten Motoreinstellungen.
-• Ziel wählen: minimales Rastmoment, minimale Radialkraft, maximale EMK oder Kompromiss Rastmoment / Kraft / EMK.
-• Freie Parameter ankreuzen (Magnetbogen, Nutöffnung, Magnetdicke, Versatzamplitude, Zahnköpfe, Luftspalt), Anzahl der Versuche und zu erhaltenden EMK-Anteil wählen.
-• Jeder Versuch ist eine vollständige Motorberechnung; die Suche (numerische Mehrstart-Optimierung nach Nelder–Mead) beachtet die Nebenbedingungen: keine überlappenden Magnete, Unwucht, minimale EMK.
-• Die 5 besten unterschiedlichen Lösungen erscheinen live mit ihren Kennwerten; „Übernehmen“ überträgt die gewählte ins Projekt. Die Kurve zeigt den Verlauf der besten Bewertung.
-• „Beste Lösung live übernehmen“ (standardmäßig an): jede bessere Lösung wird sofort ins Projekt übernommen und alle Ansichten (Kurven, 3D, Vergleich, Parameterstudie…) aktualisieren sich während der Suche. „↺ Zurück zum Ausgangsprojekt“ macht alles rückgängig.",
+"Étape Optimisation : trois onglets qui s'enchaînent.
+Onglet « Ajustement I.A » :
+• Objectif : couple de détente minimal, force radiale minimale, FEM maximale, compromis, ondulation de couple minimale, spectre le plus étalé, entropie spectrale maximale, ou compromis spectre étalé / cogging faible.
+• Réglages libres (arc des aimants, ouverture d'encoche, épaisseur des aimants, amplitude des décalages, becs de dents, entrefer), nombre d'essais, part de FEM conservée.
+• Contraintes facultatives : culasse rotor non saturée (épaisseur dimensionnée pour chaque essai), pertes Joule au plus « original + x % », couple moyen au moins « x % de l'original », amplitude minimale des décalages.
+• Chaque essai est un calcul du moteur ; la recherche (Nelder–Mead multi-départs) respecte les contraintes. Les 5 meilleures solutions s'affichent en direct.
+Onglet « Console » (il s'ouvre au lancement) :
+• Moteur I.A : bilan départ → meilleure solution, graphe 3D des possibilités explorées (il tourne ; glisser pour tourner, molette pour zoomer, clic sur un nœud pour le détail et « Appliquer cet essai »), journal des essais en bas (déplier : au moins 5 lignes).
+• Script : commandes enchaînées (taper « aide »).
+Onglet « Comparaison des solutions » (il s'ouvre à la fin de l'ajustement) :
+• L'original et les propositions sont recalculés en calcul complet ; tableau de 18 métriques avec l'écart à l'original et la meilleure valeur de chaque ligne (★), six graphiques superposés, profil normalisé.
+• « Appliquer » sous la solution choisie, ou « Garder l'original ». Historique des comparaisons, copie du tableau en CSV.",
+"Optimisation step: three tabs in sequence.
+“A.I. tuning” tab:
+• Goal: minimum cogging torque, minimum radial force, maximum back-EMF, trade-off, minimum torque ripple, most spread spectrum, maximum spectral entropy, or spread spectrum / low cogging trade-off.
+• Free settings (magnet arc, slot opening, magnet thickness, offset amplitude, tooth tips, air gap), number of trials, share of back-EMF kept.
+• Optional constraints: rotor yoke not saturated (thickness sized for each trial), copper losses at most “original + x %”, mean torque at least “x % of original”, minimum offset amplitude.
+• Each trial is a motor computation; the search (multi-start Nelder–Mead) respects the constraints. The 5 best solutions are shown live.
+“Console” tab (opens when the tuning starts):
+• A.I. engine: start → best summary, 3D graph of the explored possibilities (it rotates; drag to rotate, wheel to zoom, click a node for details and “Apply this trial”), trial log at the bottom (expand: at least 5 lines).
+• Script: chained commands (type “help”).
+“Solution comparison” tab (opens at the end of the tuning):
+• The original and the proposals are fully recomputed; table of 18 metrics with the deviation from the original and the best value of each row (★), six overlaid charts, normalised profile.
+• “Apply” under the chosen solution, or “Keep the original”. Comparison history, table copied as CSV.",
+"Etapa Optimización: tres pestañas encadenadas.
+Pestaña «Ajuste I.A»:
+• Objetivo: par de cogging mínimo, fuerza radial mínima, FCEM máxima, compromiso, rizado de par mínimo, espectro más repartido, entropía espectral máxima o compromiso espectro repartido / cogging bajo.
+• Ajustes libres (arco de imanes, apertura de ranura, espesor de imanes, amplitud de desfases, picos de diente, entrehierro), número de ensayos, parte de FCEM conservada.
+• Restricciones opcionales: culata del rotor no saturada (espesor dimensionado en cada ensayo), pérdidas Joule como máximo «original + x %», par medio al menos «x % del original», amplitud mínima de desfases.
+• Cada ensayo es un cálculo del motor; la búsqueda (Nelder–Mead multiarranque) respeta las restricciones. Las 5 mejores soluciones se muestran en directo.
+Pestaña «Consola» (se abre al lanzar):
+• Motor I.A: resumen inicio → mejor solución, grafo 3D de las posibilidades exploradas (gira; arrastrar para girar, rueda para el zoom, clic en un nodo para el detalle y «Aplicar este ensayo»), registro de ensayos abajo (desplegar: al menos 5 líneas).
+• Script: comandos encadenados (escriba «aide»).
+Pestaña «Comparación de las soluciones» (se abre al terminar el ajuste):
+• El original y las propuestas se recalculan con el cálculo completo; tabla de 18 métricas con la desviación respecto al original y el mejor valor de cada fila (★), seis gráficos superpuestos, perfil normalizado.
+• «Aplicar» bajo la solución elegida, o «Conservar el original». Historial de comparaciones, copia de la tabla en CSV.",
+"Schritt Optimierung: drei aufeinanderfolgende Reiter.
+Reiter „KI-Optimierung“:
+• Ziel: minimales Rastmoment, minimale Radialkraft, maximale EMK, Kompromiss, minimale Drehmomentwelligkeit, breitestes Spektrum, maximale spektrale Entropie oder Kompromiss breites Spektrum / geringes Rastmoment.
+• Freie Parameter (Magnetbogen, Nutöffnung, Magnetdicke, Versatzamplitude, Zahnköpfe, Luftspalt), Anzahl der Versuche, erhaltener EMK-Anteil.
+• Optionale Nebenbedingungen: Rotorjoch nicht gesättigt (Dicke je Versuch bemessen), Kupferverluste höchstens „Original + x %“, mittleres Moment mindestens „x % des Originals“, minimale Versatzamplitude.
+• Jeder Versuch ist eine Motorberechnung; die Suche (Mehrstart-Nelder–Mead) beachtet die Nebenbedingungen. Die 5 besten Lösungen erscheinen live.
+Reiter „Konsole“ (öffnet sich beim Start):
+• K.I.-Engine: Übersicht Start → beste Lösung, 3D-Graph der erkundeten Möglichkeiten (er dreht sich; ziehen zum Drehen, Mausrad zum Zoomen, Klick auf einen Knoten für Details und „Diesen Versuch übernehmen“), Versuchsprotokoll unten (aufklappen: mindestens 5 Zeilen).
+• Skript: verkettete Befehle („aide“ eingeben).
+Reiter „Lösungsvergleich“ (öffnet sich am Ende der Abstimmung):
+• Original und Vorschläge werden vollständig neu berechnet; Tabelle mit 18 Kennwerten, Abweichung zum Original und bestem Wert je Zeile (★), sechs überlagerte Diagramme, normiertes Profil.
+• „Übernehmen“ unter der gewählten Lösung oder „Original behalten“. Vergleichsverlauf, Tabelle als CSV kopieren.",
         ],
     },
     Section {

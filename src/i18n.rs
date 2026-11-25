@@ -1028,6 +1028,20 @@ pub static TABLE: &[(&str, &str, &str, &str)] = &[
     ("Conception", "Design", "Diseño", "Entwurf"),
     ("Analyse", "Analysis", "Análisis", "Analyse"),
     ("Optimisation", "Optimisation", "Optimización", "Optimierung"),
+    // accueil, jauge
+    ("Bienvenue dans FractLab", "Welcome to FractLab", "Bienvenido a FractLab", "Willkommen bei FractLab"),
+    ("FractLab calcule le champ, le couple, la FEM, les forces et les pertes d'une machine à aimants permanents, puis l'optimise. Une étude suit quatre étapes :", "FractLab computes the field, torque, back-EMF, forces and losses of a permanent-magnet machine, then optimises it. A study follows four steps:", "FractLab calcula el campo, el par, la FCEM, las fuerzas y las pérdidas de una máquina de imanes permanentes, y luego la optimiza. Un estudio sigue cuatro etapas:", "FractLab berechnet Feld, Moment, Gegen-EMK, Kräfte und Verluste einer Permanentmagnetmaschine und optimiert sie dann. Eine Studie folgt vier Schritten:"),
+    ("régler la machine dans le panneau de gauche ; la Synthèse et la jauge disent ce qui va ou non", "set up the machine in the left panel; the Summary and the gauge show what is fine and what is not", "ajustar la máquina en el panel izquierdo; el Resumen y el indicador dicen qué va bien y qué no", "die Maschine in der linken Leiste einstellen; Übersicht und Anzeige zeigen, was passt und was nicht"),
+    ("champ, couple de détente, FEM, forces, charge, dynamique", "field, cogging torque, back-EMF, forces, load, dynamics", "campo, par de cogging, FCEM, fuerzas, carga, dinámica", "Feld, Rastmoment, Gegen-EMK, Kräfte, Last, Dynamik"),
+    ("Ajustement I.A, puis comparaison des solutions pour choisir", "A.I. tuning, then solution comparison to choose", "Ajuste I.A, y luego comparación de las soluciones para elegir", "K.I.-Abstimmung, dann Lösungsvergleich zur Auswahl"),
+    ("contrôle par un solveur volumes finis indépendant", "check with an independent finite-volume solver", "control con un solucionador de volúmenes finitos independiente", "Kontrolle mit einem unabhängigen Finite-Volumen-Löser"),
+    ("Ctrl+Z annule, F1 ouvre le guide, la loupe du panneau retrouve un paramètre.", "Ctrl+Z undoes, F1 opens the guide, the panel's magnifier finds a parameter.", "Ctrl+Z deshace, F1 abre la guía, la lupa del panel encuentra un parámetro.", "Strg+Z macht rückgängig, F1 öffnet die Anleitung, die Lupe der Leiste findet einen Parameter."),
+    ("Démo guidée (recommandé)", "Guided demo (recommended)", "Demo guiada (recomendado)", "Geführte Demo (empfohlen)"),
+    ("Commencer avec ce projet", "Start with this project", "Empezar con este proyecto", "Mit diesem Projekt beginnen"),
+    ("Ne plus afficher au démarrage", "Do not show at start-up again", "No volver a mostrar al iniciar", "Beim Start nicht mehr anzeigen"),
+    ("Qualité de conception", "Design quality", "Calidad del diseño", "Entwurfsqualität"),
+    ("critères tenus", "criteria met", "criterios cumplidos", "Kriterien erfüllt"),
+    ("tous les critères sont tenus", "all criteria are met", "se cumplen todos los criterios", "alle Kriterien sind erfüllt"),
 ];
 
 #[cfg(test)]

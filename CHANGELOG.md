@@ -3,6 +3,37 @@
 Format : une section par version, la plus récente en premier.
 *English summary at the end of each section.*
 
+## 0.1.10 — interface professionnelle : espace de travail, annuler, portable et 4K
+
+- **Espace de travail** : Ajustement I.A, console et comparaison des solutions
+  deviennent des onglets de la zone centrale (plus de fenêtres flottantes qui
+  se chevauchent).
+- **Navigation par étapes d'étude** : Conception, Analyse, Optimisation,
+  Validation ; chaque étape retient son dernier onglet.
+- **Projet** : annuler / rétablir (⟲ ⟳, Ctrl+Z, Ctrl+Y), « ● modifié » et
+  liste des modifications depuis l'enregistrement, projets récents.
+- **Recherche dans les paramètres** (loupe du panneau) : champs encadrés en
+  jaune, sections dépliées.
+- **Jauge de qualité de conception** dans la Synthèse (critères tenus sur
+  critères évalués, détail au survol) ; **accueil** au premier lancement.
+- **Portable et 4K** : panneau des paramètres proportionné à l'écran, barre
+  d'actions qui passe à la ligne, cartes de la Synthèse sans débordement,
+  comparaison des solutions en colonnes sur grand écran et superposée sur
+  portable, zoom automatique jusqu'à ×1,7 en 4K.
+- Couleurs harmonisées (une couleur d'action principale), pastilles
+  « nouveau » sans clignotement.
+- **Démo** : l'étape Ajustement I.A n'est plus sautée quand l'affichage 3D
+  ralentit les images.
+- Guide : nouvelle section « Espace de travail et gestion du projet »,
+  section Ajustement I.A réécrite (objectifs, contraintes, console,
+  comparaison).
+
+*English — Workspace tabs instead of floating windows, study-step
+navigation, undo/redo, modified-project indicator and change list, recent
+projects, parameter search, design-quality gauge, first-launch welcome;
+layouts checked on a laptop (1366×768) and in 4K; demo A.I. step fixed;
+guide updated.*
+
 ## 0.1.9 — comparaison des solutions, contraintes et objectifs spectraux de l'Ajustement I.A
 
 - **Comparaison des solutions** (après un Ajustement I.A, bouton

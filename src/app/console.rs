@@ -273,7 +273,7 @@ impl App {
                 if !running
                     && self.opt_base.is_some()
                     && !self.opt_top.is_empty()
-                    && ui.add(egui::Button::new(RichText::new(format!("⚖ {}", t("Comparer les solutions"))).strong().color(Color32::WHITE)).fill(Color32::from_rgb(0, 120, 90))).clicked()
+                    && ui.add(egui::Button::new(RichText::new(format!("⚖ {}", t("Comparer les solutions"))).strong().color(Color32::WHITE)).fill(ACTION)).clicked()
                 {
                     want_cmp = true;
                 }
