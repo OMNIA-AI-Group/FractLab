@@ -442,6 +442,24 @@ fn cmd(c: &mut Ctx, line: &str, out: &mut dyn FnMut(Kind, String), spec_out: &mu
                 None => out(Kind::Error, tr("aucune solution respectant les contraintes").into()),
             }
         }
+        "fige" | "freeze" => {
+            c.spec.custom_angles_deg = Some(c.spec.magnet_angles_deg());
+            out(Kind::Info, tr("Positions des aimants inscrites dans le projet").into());
+        }
+        "enregistre" | "save" => {
+            let f = words[1..].join(" ");
+            if f.is_empty() {
+                return Err(format!("{} : {line}", tr("argument manquant")));
+            }
+            #[cfg(not(target_arch = "wasm32"))]
+            {
+                let json = serde_json::to_string_pretty(&c.spec).map_err(|e| e.to_string())?;
+                std::fs::write(&f, json).map_err(|e| format!("{f} : {e}"))?;
+                out(Kind::Info, format!("{} {f}", tr("Enregistré :")));
+            }
+            #[cfg(target_arch = "wasm32")]
+            return Err(tr("indisponible dans le navigateur").into());
+        }
         "applique" | "apply" => {
             spec_out(c.spec.clone());
             out(Kind::Info, tr("Projet du script reporté dans l'interface").into());
@@ -457,7 +475,7 @@ fn cmd(c: &mut Ctx, line: &str, out: &mut dyn FnMut(Kind, String), spec_out: &mu
 }
 
 /// Texte de l'aide (clés de traduction).
-const HELP: [&str; 13] = [
+const HELP: [&str; 15] = [
     "aide — cette liste",
     "variante <nom> — répartition des aimants (« reguliere » ou une répartition proposée)",
     "regle arc 0,8 — modifie un paramètre",
@@ -468,6 +486,8 @@ const HELP: [&str; 13] = [
     "balaye arc 0,6 0,9 7 — étude paramétrique",
     "compare — toutes les variantes avec les réglages du projet",
     "ia cogging 120 arc,amplitude [sat] [amin=2] — Ajustement I.A (cogging, force, fem, compromis, ondulation, etale, entropie, etale_faible)",
+    "fige — inscrit les positions des aimants dans le projet (lisible sans la répartition d'origine)",
+    "enregistre <fichier.json> — enregistre le projet du script",
     "applique — reporte le projet du script dans l'interface",
     "initial — revient au projet de départ du script",
     "# … — commentaire",

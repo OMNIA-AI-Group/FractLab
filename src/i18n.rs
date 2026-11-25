@@ -954,6 +954,10 @@ pub static TABLE: &[(&str, &str, &str, &str)] = &[
     ("Rotor intérieur, encoches semi-fermées (becs de dents), couple précis.", "Inner rotor, semi-closed slots (tooth tips), precise torque.", "Rotor interior, ranuras semicerradas (picos de diente), par preciso.", "Innenläufer, halbgeschlossene Nuten (Zahnköpfe), präzises Moment."),
     ("Grand rotor extérieur, beaucoup de pôles, couple à basse vitesse.", "Large outer rotor, many poles, torque at low speed.", "Gran rotor exterior, muchos polos, par a baja velocidad.", "Großer Außenläufer, viele Pole, Moment bei niedriger Drehzahl."),
     ("Disques : un stator entre deux rotors (deux entrefers).", "Discs: one stator between two rotors (two air gaps).", "Discos: un estátor entre dos rotores (dos entrehierros).", "Scheiben: ein Stator zwischen zwei Rotoren (zwei Luftspalte)."),
+    ("enregistre <fichier.json> — enregistre le projet du script", "save <file.json> — save the script project", "enregistre <archivo.json> — guarda el proyecto del script", "enregistre <Datei.json> — speichert das Skriptprojekt"),
+    ("indisponible dans le navigateur", "not available in the browser", "no disponible en el navegador", "im Browser nicht verfügbar"),
+    ("fige — inscrit les positions des aimants dans le projet (lisible sans la répartition d'origine)", "freeze — writes the magnet positions into the project (readable without the original layout)", "fige — escribe las posiciones de los imanes en el proyecto (legible sin la distribución original)", "fige — schreibt die Magnetpositionen ins Projekt (ohne Ursprungsanordnung lesbar)"),
+    ("Positions des aimants inscrites dans le projet", "Magnet positions written into the project", "Posiciones de los imanes escritas en el proyecto", "Magnetpositionen ins Projekt geschrieben"),
 ];
 
 #[cfg(test)]
