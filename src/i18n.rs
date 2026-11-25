@@ -998,6 +998,15 @@ pub static TABLE: &[(&str, &str, &str, &str)] = &[
     ("de l'original", "of the original", "del original", "des Originals"),
     ("pertes Joule au-dessus du seuil", "copper losses above the limit", "pérdidas Joule por encima del umbral", "Kupferverluste über der Grenze"),
     ("Après un Ajustement I.A : original et propositions côte à côte ; sinon l'historique des comparaisons", "After an A.I. tuning: original and proposals side by side; otherwise the comparison history", "Tras un Ajuste I.A: original y propuestas lado a lado; si no, el historial de comparaciones", "Nach einer K.I.-Abstimmung: Original und Vorschläge nebeneinander; sonst der Vergleichsverlauf"),
+    ("Aucune comparaison à afficher", "No comparison to show", "Ninguna comparación para mostrar", "Kein Vergleich anzuzeigen"),
+    ("Lancez un Ajustement I.A : à la fin, cette fenêtre s'ouvre seule avec le moteur original et les meilleures propositions, métriques et graphiques côte à côte.", "Run an A.I. tuning: at the end this window opens by itself with the original motor and the best proposals, metrics and charts side by side.", "Lance un Ajuste I.A: al terminar, esta ventana se abre sola con el motor original y las mejores propuestas, métricas y gráficos lado a lado.", "Starten Sie eine K.I.-Abstimmung: Am Ende öffnet sich dieses Fenster von selbst mit dem Originalmotor und den besten Vorschlägen, Kennwerte und Diagramme nebeneinander."),
+    ("Ou choisissez une comparaison précédente dans l'historique ci-dessus.", "Or pick a previous comparison in the history above.", "O elija una comparación anterior en el historial de arriba.", "Oder wählen Sie oben einen früheren Vergleich aus dem Verlauf."),
+    ("Lancer un Ajustement I.A", "Run an A.I. tuning", "Lanzar un Ajuste I.A", "K.I.-Abstimmung starten"),
+    ("Métriques", "Metrics", "Métricas", "Kennwerte"),
+    ("Graphiques", "Charts", "Gráficos", "Diagramme"),
+    ("Tous les graphiques", "All charts", "Todos los gráficos", "Alle Diagramme"),
+    ("cliquer un titre pour agrandir", "click a title to enlarge", "haga clic en un título para ampliar", "Titel anklicken zum Vergrößern"),
+    ("Agrandir", "Enlarge", "Ampliar", "Vergrößern"),
 ];
 
 #[cfg(test)]

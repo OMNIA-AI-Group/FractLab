@@ -18,6 +18,14 @@ Format : une section par version, la plus récente en premier.
   poussé hors de la fenêtre par le graphe) ; déplié, au moins 5 lignes, et
   35 % de la hauteur quand la fenêtre est agrandie.
 - **Menu Calcul** : « Ajustement I.A… » et « Comparaison des solutions… ».
+- **Comparaison des solutions, nouvelle mise en page** : elle s'ouvre
+  d'elle-même à la fin de chaque Ajustement I.A ; métriques à gauche (écart
+  à l'original sous chaque valeur), six graphiques visibles en même temps à
+  droite (couple de détente, spectre réduit aux raies significatives, FEM,
+  force, couple en charge, profil normalisé en barres horizontales) ; un
+  clic sur un titre agrandit le graphique ; fenêtre à la taille de l'écran ;
+  message et bouton « Lancer un Ajustement I.A » quand il n'y a encore rien
+  à comparer.
 - **Contraintes de l'Ajustement I.A** : « pertes Joule ≤ original + x % » et
   « couple moyen ≥ x % de l'original » (script : `joule=10`, `couple=0.95`).
   Le couple moyen de l'estimation rapide est calculé par la puissance

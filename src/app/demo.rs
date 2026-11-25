@@ -111,6 +111,11 @@ fn steps_for(key: &str) -> Vec<Step> {
 }
 
 impl App {
+    /// Aucune démo en cours ?
+    pub(super) fn demo_inactive(&self) -> bool {
+        self.demo.run.is_none()
+    }
+
     /// Lance la démo sur le moteur `key` (le projet en cours est mis de côté).
     pub(super) fn demo_start(&mut self, key: &'static str, ctx: &egui::Context) {
         if self.demo.backup.is_none() {

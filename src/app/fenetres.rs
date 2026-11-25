@@ -348,7 +348,8 @@ impl App {
         if done {
             self.opt_job = None;
             self.status = T(self.cfg.lang, "Ajustement I.A terminé").into();
-            if std::env::var("FRACTLAB_IA").as_deref() == Ok("compare") {
+            // la comparaison des solutions s'ouvre d'elle-même (le chercheur choisit)
+            if self.demo_inactive() && self.opt_base.is_some() && !self.opt_top.is_empty() {
                 self.cmpia_start();
             }
         }

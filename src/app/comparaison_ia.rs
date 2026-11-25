@@ -171,12 +171,12 @@ impl App {
         let Some(base) = self.opt_base.clone() else { return };
         let vars = self.opt_vars_run.clone();
         let first = match std::env::var("FRACTLAB_CMPPLOT").as_deref() {
-            Ok("profil") => CmpPlot::Profil,
-            Ok("spectre") => CmpPlot::Spectre,
-            _ => CmpPlot::Cogging,
+            Ok("profil") => Some(CmpPlot::Profil),
+            Ok("spectre") => Some(CmpPlot::Spectre),
+            _ => None,
         };
         let history = self.cmpia.history.take();
-        let mut c = CmpIa { open: true, vars: vars.clone(), plot: Some(first), history, ..Default::default() };
+        let mut c = CmpIa { open: true, vars: vars.clone(), plot: first, history, ..Default::default() };
         c.when = web_time::SystemTime::now().duration_since(web_time::SystemTime::UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0);
         c.project = base.name.clone();
         c.goal = self.opt_goal.name().to_string();
@@ -284,9 +284,8 @@ impl App {
         c.job = None;
         c.rec = Some(i);
         c.replay = false;
-        if c.plot != Some(CmpPlot::Profil) {
-            c.plot = Some(CmpPlot::Profil);
-        }
+        // relue : les courbes ne sont pas gardées, le profil normalisé l'est
+        c.plot = Some(CmpPlot::Profil);
     }
 
     /// Tableau CSV des métriques (séparateur « ; »).
@@ -328,10 +327,13 @@ impl App {
         let mut load_i: Option<usize> = None;
         let mut recompute = false;
         let mut forget = false;
+        let mut open_ia = false;
         if self.cmpia.history.is_none() {
             self.cmpia.history = Some(load_history());
         }
-        egui::Window::new(format!("⚖ {}", t("Comparaison des solutions"))).open(&mut open).default_size([1180.0, 820.0]).resizable(true).show(ctx, |ui| {
+        let sr = ctx.screen_rect();
+        let size = [(sr.width() * 0.94).clamp(900.0, 3000.0), (sr.height() * 0.88).clamp(600.0, 1800.0)];
+        egui::Window::new(format!("⚖ {}", t("Comparaison des solutions"))).open(&mut open).default_size(size).default_pos([sr.left() + sr.width() * 0.03, sr.top() + 30.0]).resizable(true).show(ctx, |ui| {
             let c = &mut self.cmpia;
             let n = c.specs.len();
             let ready = c.res.iter().filter(|r| r.is_some()).count();
@@ -377,10 +379,35 @@ impl App {
                     export = true;
                 }
             });
-            egui::ScrollArea::vertical().id_source("cmpia_scroll").auto_shrink([false, false]).show(ui, |ui| {
+            if n == 0 {
+                // rien à comparer encore : expliquer et proposer l'Ajustement I.A
+                ui.add_space(30.0);
+                ui.vertical_centered(|ui| {
+                    ui.label(RichText::new(t("Aucune comparaison à afficher")).size(20.0).strong());
+                    ui.add_space(6.0);
+                    ui.label(t("Lancez un Ajustement I.A : à la fin, cette fenêtre s'ouvre seule avec le moteur original et les meilleures propositions, métriques et graphiques côte à côte."));
+                    ui.label(RichText::new(t("Ou choisissez une comparaison précédente dans l'historique ci-dessus.")).weak());
+                    ui.add_space(10.0);
+                    if ui.add(egui::Button::new(RichText::new(format!("✨ {}", t("Lancer un Ajustement I.A"))).strong().size(16.0).color(Color32::WHITE)).fill(Color32::from_rgb(140, 70, 0)).min_size(egui::vec2(0.0, 34.0))).clicked() {
+                        open_ia = true;
+                    }
+                });
+                return;
+            }
+            let dark = self.cfg.theme == Theme::Sombre;
+            let avail = ui.available_size();
+            let left_w = (avail.x * 0.47).clamp(480.0, 1500.0);
+            let tq = u.factor(Q::Torque);
+            let ff = u.factor(Q::Force);
+            let base: Vec<Option<f64>> = c.metrics.first().cloned().unwrap_or_default();
+            ui.horizontal_top(|ui| {
+                // ================= métriques (gauche) =================
+                ui.allocate_ui_with_layout(egui::vec2(left_w, avail.y), egui::Layout::top_down(egui::Align::LEFT), |ui| {
+                    ui.set_min_size(egui::vec2(left_w, avail.y));
+                    ui.label(RichText::new(format!("📊 {}", t("Métriques"))).strong().size(15.0));
+                    egui::ScrollArea::both().id_source("cmpia_table").auto_shrink([false, false]).show(ui, |ui| {
                 // ---------------- tableau des métriques ----------------
-                let base: Vec<Option<f64>> = c.metrics.first().cloned().unwrap_or_default();
-                egui::Grid::new("cmpia_grid").striped(true).num_columns(n + 2).spacing([16.0, 3.0]).show(ui, |ui| {
+                egui::Grid::new("cmpia_grid").striped(true).num_columns(n + 2).spacing([12.0, 2.0]).show(ui, |ui| {
                     ui.label(RichText::new(t("Grandeur")).strong());
                     ui.label("");
                     for k in 0..n {
@@ -418,7 +445,8 @@ impl App {
                             match (vals[k], &c.errs[k]) {
                                 (Some(v), _) => {
                                     let b0 = base.get(mi).copied().flatten();
-                                    let mut txt = fnum(v);
+                                    let txt = fnum(v);
+                                    let mut delta = String::new();
                                     let mut color = Color32::GRAY;
                                     if k > 0
                                         && let Some(b0) = b0
@@ -427,7 +455,7 @@ impl App {
                                         // écart relatif, sauf pour une référence négative ou un angle : écart absolu
                                         let absolute = b0 <= 0.0 || unit == "°";
                                         let d = if absolute { v - b0 } else { 100.0 * (v - b0) / b0.abs() };
-                                        txt += &if absolute { format!("  (Δ {d:+.3} {unit})") } else { format!("  ({d:+.1} %)") };
+                                        delta = if absolute { format!("Δ {d:+.3} {unit}") } else { format!("{d:+.1} %") };
                                         let eps = if absolute { 1e-6 } else { 0.05 };
                                         let good = match better {
                                             Better::Lower => d < -eps,
@@ -441,14 +469,20 @@ impl App {
                                         };
                                         color = if good { badge(true) } else if bad { badge(false) } else { Color32::GRAY };
                                     } else if k == 0 {
-                                        color = if self.cfg.theme == Theme::Sombre { Color32::from_gray(220) } else { Color32::from_gray(30) };
+                                        color = if dark { Color32::from_gray(220) } else { Color32::from_gray(30) };
                                     }
                                     let star = best.is_some_and(|(bk, _)| bk == k);
-                                    let mut rt = RichText::new(if star { format!("★ {txt}") } else { txt }).monospace().color(color);
+                                    let mut rt = RichText::new(if star { format!("★ {txt}") } else { txt }).monospace().color(if k == 0 { color } else if dark { Color32::from_gray(215) } else { Color32::from_gray(35) });
                                     if star {
                                         rt = rt.strong();
                                     }
-                                    ui.label(rt);
+                                    ui.vertical(|ui| {
+                                        ui.spacing_mut().item_spacing.y = 0.0;
+                                        ui.label(rt);
+                                        if !delta.is_empty() {
+                                            ui.label(RichText::new(delta).small().monospace().color(color));
+                                        }
+                                    });
                                 }
                                 (None, Some(e)) => {
                                     ui.label(RichText::new("✖").color(badge(false))).on_hover_text(e);
@@ -475,65 +509,82 @@ impl App {
                     }
                     ui.end_row();
                 });
-                ui.add_space(8.0);
-                ui.separator();
-                // ---------------- graphiques ----------------
-                let plot = c.plot.unwrap_or(CmpPlot::Cogging);
-                let mut sel = plot;
-                ui.horizontal_wrapped(|ui| {
-                    for (p, k) in [
-                        (CmpPlot::Cogging, "Couple de détente"),
-                        (CmpPlot::Spectre, "Spectre du couple de détente"),
-                        (CmpPlot::Fem, "FEM phase A"),
-                        (CmpPlot::Forces, "Force sur le rotor"),
-                        (CmpPlot::Charge, "Couple en charge"),
-                        (CmpPlot::Profil, "Profil normalisé (original = 100 %)"),
-                    ] {
-                        ui.selectable_value(&mut sel, p, t(k));
-                    }
+                    });
                 });
-                c.plot = Some(sel);
-                let h = (ui.available_height() - 10.0).clamp(300.0, 520.0);
-                let shown: Vec<usize> = (0..n).filter(|k| c.shown[*k] && (c.res[*k].is_some() || (sel == CmpPlot::Profil && c.metrics[*k].iter().any(|v| v.is_some())))).collect();
-                let tq = u.factor(Q::Torque);
-                let ff = u.factor(Q::Force);
-                match sel {
-                    CmpPlot::Profil => {
-                        let rows: Vec<(usize, &str)> = METRICS.iter().enumerate().filter(|(_, m)| m.4).map(|(i, m)| (i, m.0)).collect();
-                        let nb = shown.len().max(1) as f64;
-                        let mut charts = Vec::new();
-                        for (si, &k) in shown.iter().enumerate() {
-                            let bars: Vec<Bar> = rows
-                                .iter()
-                                .enumerate()
-                                .filter_map(|(ri, (mi, name))| {
-                                    let b0 = base.get(*mi).copied().flatten()?;
-                                    if b0.abs() < 1e-12 {
-                                        return None;
-                                    }
-                                    let v = 100.0 * c.metrics[k].get(*mi).copied().flatten()? / b0;
-                                    Some(Bar::new(ri as f64 + (si as f64 - (nb - 1.0) / 2.0) * 0.8 / nb, v).width(0.8 / nb).name(format!("{} — {}", c.names[k], t(name))))
-                                })
-                                .collect();
-                            charts.push(BarChart::new(bars).color(col(k)).name(&c.names[k]));
+                ui.separator();
+                // ================= graphiques (droite) =================
+                let rw = ui.available_width();
+                ui.allocate_ui_with_layout(egui::vec2(rw, avail.y), egui::Layout::top_down(egui::Align::LEFT), |ui| {
+                    let zoom = c.plot;
+                    ui.horizontal(|ui| {
+                        ui.label(RichText::new(format!("📈 {}", t("Graphiques"))).strong().size(15.0));
+                        if zoom.is_some() {
+                            if ui.button(format!("⊞ {}", t("Tous les graphiques"))).clicked() {
+                                c.plot = None;
+                            }
+                        } else {
+                            ui.label(RichText::new(t("cliquer un titre pour agrandir")).weak().small());
                         }
-                        let labels: Vec<String> = rows.iter().map(|(_, n)| t(n).to_string()).collect();
-                        Plot::new("cmpia_profil")
-                            .height(h)
-                            .legend(Legend::default().position(Corner::RightTop))
-                            .y_axis_label(t("% de l'original"))
-                            .x_axis_formatter(move |m, _, _| {
+                    });
+                    let cr = &*c;
+                    let draw = |ui: &mut egui::Ui, sel: CmpPlot, h: f32, big: bool| {
+                        let shown: Vec<usize> = (0..n).filter(|k| cr.shown[*k] && (cr.res[*k].is_some() || (sel == CmpPlot::Profil && cr.metrics[*k].iter().any(|v| v.is_some())))).collect();
+                        if shown.is_empty() {
+                            let (r, _) = ui.allocate_exact_size(egui::vec2(ui.available_width(), h), egui::Sense::hover());
+                            ui.painter().text(r.center(), egui::Align2::CENTER_CENTER, if cr.job.is_some() { t("calcul des solutions") } else { t("Recalculer les courbes") }, egui::FontId::proportional(13.0), Color32::GRAY);
+                            return;
+                        }
+                        let id = format!("cmpia_{}_{}", sel as u8, big);
+                        let legend = if big { Some(Legend::default().position(Corner::RightTop)) } else { None };
+                        if sel == CmpPlot::Profil {
+                            let rows: Vec<(usize, &str)> = METRICS.iter().enumerate().filter(|(_, m)| m.4).map(|(i, m)| (i, m.0)).collect();
+                            let nb = shown.len().max(1) as f64;
+                            let mut charts = Vec::new();
+                            for (si, &k) in shown.iter().enumerate() {
+                                let bars: Vec<Bar> = rows
+                                    .iter()
+                                    .enumerate()
+                                    .filter_map(|(ri, (mi, name))| {
+                                        let b0 = base.get(*mi).copied().flatten()?;
+                                        if b0.abs() < 1e-12 {
+                                            return None;
+                                        }
+                                        let v = 100.0 * cr.metrics[k].get(*mi).copied().flatten()? / b0;
+                                        // métriques de haut en bas dans l'ordre du tableau
+                                        let y = (rows.len() - 1 - ri) as f64 - (si as f64 - (nb - 1.0) / 2.0) * 0.8 / nb;
+                                        Some(Bar::new(y, v).width(0.8 / nb).name(format!("{} — {}", cr.names[k], t(name))))
+                                    })
+                                    .collect();
+                                charts.push(BarChart::new(bars).horizontal().color(col(k)).name(&cr.names[k]));
+                            }
+                            let nr = rows.len();
+                            let labels: Vec<String> = rows.iter().map(|(_, n)| t(n).to_string()).collect();
+                            let mut p = Plot::new(id).height(h).x_axis_label(t("% de l'original")).y_axis_width(5).y_axis_formatter(move |m, _, _| {
                                 let i = m.value.round();
-                                if (m.value - i).abs() < 0.01 && i >= 0.0 { labels.get(i as usize).cloned().unwrap_or_default() } else { String::new() }
-                            })
-                            .show(ui, |p| {
-                                p.hline(egui_plot::HLine::new(100.0).color(Color32::GRAY));
+                                if (m.value - i).abs() < 0.01 && i >= 0.0 && (i as usize) < nr { labels.get(nr - 1 - i as usize).cloned().unwrap_or_default() } else { String::new() }
+                            });
+                            if let Some(l) = legend {
+                                p = p.legend(l);
+                            }
+                            p.show(ui, |p| {
+                                p.vline(egui_plot::VLine::new(100.0).color(Color32::GRAY));
                                 for ch in charts {
                                     p.bar_chart(ch);
                                 }
                             });
-                    }
-                    _ => {
+                            return;
+                        }
+                        // spectre : raies significatives seulement (> 1 % de la plus forte), 60 au plus
+                        let spec_n = shown
+                            .iter()
+                            .filter_map(|&k| cr.res[k].as_ref())
+                            .map(|r| {
+                                let mx = r.cog.spectrum.iter().skip(1).cloned().fold(0.0_f64, f64::max);
+                                r.cog.spectrum.iter().enumerate().skip(1).filter(|(_, v)| **v > 0.01 * mx).map(|(i, _)| i).max().unwrap_or(1)
+                            })
+                            .max()
+                            .unwrap_or(1)
+                            .clamp(4, 60);
                         let (xl, yl) = match sel {
                             CmpPlot::Cogging => ("θr [°]".to_string(), format!("{} [{}]", t("couple de détente"), u.sym(Q::Torque))),
                             CmpPlot::Spectre => (t("ordre par tour").to_string(), format!("{} [{}]", t("amplitude"), u.sym(Q::Torque))),
@@ -541,33 +592,74 @@ impl App {
                             CmpPlot::Forces => ("θr [°]".to_string(), format!("|F| [{}]", u.sym(Q::Force))),
                             _ => ("θr [°]".to_string(), format!("{} [{}]", t("couple"), u.sym(Q::Torque))),
                         };
-                        Plot::new(format!("cmpia_{}", sel as u8)).height(h).legend(Legend::default().position(Corner::RightTop)).x_axis_label(xl).y_axis_label(yl).show(ui, |p| {
+                        let mut p = Plot::new(id).height(h).x_axis_label(xl).y_axis_label(yl);
+                        if let Some(l) = legend {
+                            p = p.legend(l);
+                        }
+                        p.show(ui, |p| {
                             for &k in &shown {
-                                let r = c.res[k].as_ref().unwrap();
+                                let r = cr.res[k].as_ref().unwrap();
                                 let pts: Vec<[f64; 2]> = match sel {
                                     CmpPlot::Cogging => r.cog.angles_deg.iter().zip(&r.cog.torque_nm).map(|(a, v)| [*a, v * tq]).collect(),
                                     CmpPlot::Spectre => {
                                         let span = r.cog.metrics.span_deg.max(1e-9);
-                                        r.cog.spectrum.iter().enumerate().skip(1).map(|(i, v)| [i as f64 * 360.0 / span, v * tq]).collect()
+                                        r.cog.spectrum.iter().enumerate().skip(1).take(spec_n).map(|(i, v)| [i as f64 * 360.0 / span, v * tq]).collect()
                                     }
                                     CmpPlot::Fem => r.emf.angles_deg.iter().zip(&r.emf.emf[0]).map(|(a, v)| [*a, *v]).collect(),
                                     CmpPlot::Forces => r.forces.angles_deg.iter().zip(r.forces.fx.iter().zip(&r.forces.fy)).map(|(a, (x, y))| [*a, x.hypot(*y) * ff]).collect(),
                                     _ => r.load.angles_deg.iter().zip(&r.load.torque).map(|(a, v)| [*a, v * tq]).collect(),
                                 };
                                 if sel == CmpPlot::Spectre {
-                                    p.points(Points::new(PlotPoints::from(pts.clone())).radius(2.5f32).color(col(k)).name(&c.names[k]));
+                                    p.points(Points::new(PlotPoints::from(pts.clone())).radius(2.5f32).color(col(k)).name(&cr.names[k]));
                                     for q in pts {
                                         p.line(Line::new(PlotPoints::from(vec![[q[0], 0.0], q])).color(col(k).gamma_multiply(0.6)).width(1.0f32));
                                     }
                                 } else {
-                                    p.line(Line::new(PlotPoints::from(pts)).color(col(k)).width(if k == 0 { 2.5f32 } else { 1.6f32 }).name(&c.names[k]));
+                                    p.line(Line::new(PlotPoints::from(pts)).color(col(k)).width(if k == 0 { 2.5f32 } else { 1.6f32 }).name(&cr.names[k]));
                                 }
                             }
                         });
+                    };
+                    const PLOTS: [(CmpPlot, &str); 6] = [
+                        (CmpPlot::Cogging, "Couple de détente"),
+                        (CmpPlot::Spectre, "Spectre du couple de détente"),
+                        (CmpPlot::Fem, "FEM phase A"),
+                        (CmpPlot::Forces, "Force sur le rotor"),
+                        (CmpPlot::Charge, "Couple en charge"),
+                        (CmpPlot::Profil, "Profil normalisé (original = 100 %)"),
+                    ];
+                    let mut clicked: Option<CmpPlot> = None;
+                    match zoom {
+                        Some(sel) => {
+                            let title = PLOTS.iter().find(|p| p.0 == sel).map(|p| p.1).unwrap_or("");
+                            ui.label(RichText::new(t(title)).strong());
+                            let h = (ui.available_height() - 8.0).max(200.0);
+                            draw(ui, sel, h, true);
+                        }
+                        None => {
+                            // grille 2 × 3 : tous les graphiques visibles en même temps
+                            let head = ui.text_style_height(&egui::TextStyle::Body) + 8.0;
+                            let h = ((ui.available_height() - 3.0 * head - 16.0) / 3.0).max(110.0);
+                            ui.columns(2, |cols| {
+                                for (i, (sel, title)) in PLOTS.iter().enumerate() {
+                                    let ui = &mut cols[i % 2];
+                                    if ui.add(egui::Label::new(RichText::new(format!("🔍 {}", t(title))).strong()).sense(egui::Sense::click())).on_hover_text(t("Agrandir")).clicked() {
+                                        clicked = Some(*sel);
+                                    }
+                                    draw(ui, *sel, h, false);
+                                }
+                            });
+                        }
                     }
-                }
+                    if let Some(p) = clicked {
+                        c.plot = Some(p);
+                    }
+                });
             });
         });
+        if open_ia {
+            self.show_opt = true;
+        }
         if let Some(i) = load_i {
             self.cmpia_load(i);
         }
