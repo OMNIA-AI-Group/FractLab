@@ -16,6 +16,14 @@ Format : une section par version, la plus récente en premier.
   CSV.
 - **Journal des essais** : au moins 5 lignes visibles à l'ouverture, plus
   quand la fenêtre est agrandie.
+- **Contraintes de l'Ajustement I.A** : « pertes Joule ≤ original + x % » et
+  « couple moyen ≥ x % de l'original » (script : `joule=10`, `couple=0.95`).
+  Le couple moyen de l'estimation rapide est calculé par la puissance
+  électromagnétique (exact même avec une forte ondulation).
+- **Historique des comparaisons** : chaque comparaison est gardée (date à
+  l'heure de France, projet, objectif, réglages, métriques, solution
+  retenue) et se rouvre d'une séance à l'autre ; tableau et profil tout de
+  suite, courbes recalculées à la demande.
 - **Ajustement I.A** : amplitude minimale des décalages réglable quand
   l'amplitude est un réglage libre (empêche l'ajustement de revenir à un
   rotor régulier) ; commande de script `ia … amin=2`. Trois objectifs
@@ -28,7 +36,7 @@ Format : une section par version, la plus récente en premier.
   ou sans becs de dents. Le modèle à encoches ouvertes de SIMUMSAP surestime
   l'inductance d'environ 20 % sur des encoches larges (voir docs/MODELE.md).
 
-*English — Solution comparison window after A.I. tuning (original and proposals fully recomputed, 18 metrics, overlaid charts, normalised profile, apply or keep the original, CSV); trial log shows at least 5 lines. Minimum offset amplitude and three spectral goals (most spread spectrum, maximum entropy, spread/low-cogging trade-off) for A.I. tuning; inductance checked
+*English — Copper-loss and torque constraints for A.I. tuning; persistent comparison history. Solution comparison window after A.I. tuning (original and proposals fully recomputed, 18 metrics, overlaid charts, normalised profile, apply or keep the original, CSV); trial log shows at least 5 lines. Minimum offset amplitude and three spectral goals (most spread spectrum, maximum entropy, spread/low-cogging trade-off) for A.I. tuning; inductance checked
 against finite volumes (< 1 %); SIMUMSAP's open-slot model overestimates
 inductance by about 20 % on wide slots.*
 

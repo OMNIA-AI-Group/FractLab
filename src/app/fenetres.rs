@@ -378,6 +378,27 @@ impl App {
                     lbl(ui, t("FEM conservée ≥"));
                     ui.add(egui::DragValue::new(&mut self.opt_emf_keep).clamp_range(0.5..=1.0).speed(0.01).max_decimals(2));
                     chk(ui, &mut self.opt_sat_limit, t("Culasse rotor non saturée"));
+                });
+                ui.horizontal_wrapped(|ui| {
+                    let mut on = self.opt_joule_max.is_some();
+                    if chk(ui, &mut on, t("Pertes Joule ≤ original +")).changed() {
+                        self.opt_joule_max = on.then_some(10.0);
+                    }
+                    if let Some(x) = &mut self.opt_joule_max {
+                        ui.add(egui::DragValue::new(x).clamp_range(0.0..=200.0).speed(0.5).max_decimals(1).suffix(" %"));
+                    }
+                    ui.separator();
+                    let mut on = self.opt_torque_keep.is_some();
+                    if chk(ui, &mut on, t("Couple moyen ≥")).changed() {
+                        self.opt_torque_keep = on.then_some(0.95);
+                    }
+                    if let Some(x) = &mut self.opt_torque_keep {
+                        let mut pct = *x * 100.0;
+                        if ui.add(egui::DragValue::new(&mut pct).clamp_range(50.0..=150.0).speed(0.5).max_decimals(1).suffix(" %")).changed() {
+                            *x = pct / 100.0;
+                        }
+                        lbl(ui, t("de l'original"));
+                    }
                     if crate::repartition::uses_offsets() && self.opt_vars.iter().any(|(v, on)| *on && *v == op::Var::SkewAmp) {
                         lbl(ui, t("Amplitude des décalages ≥"));
                         ui.add(egui::DragValue::new(&mut self.opt_skew_min).clamp_range(0.0..=8.0).speed(0.05).max_decimals(2).suffix(" °"));
@@ -401,7 +422,7 @@ impl App {
                             self.opt_top.clear();
                             self.opt_hist.clear();
                             self.console_ia_start(&vars);
-                            self.opt_job = Some(op::run(self.spec.clone(), op::Setup { vars, goal: self.opt_goal, budget: self.opt_budget, emf_keep: self.opt_emf_keep, sat_limit: self.opt_sat_limit, skew_min: self.opt_skew_min }));
+                            self.opt_job = Some(op::run(self.spec.clone(), op::Setup { vars, goal: self.opt_goal, budget: self.opt_budget, emf_keep: self.opt_emf_keep, sat_limit: self.opt_sat_limit, skew_min: self.opt_skew_min, joule_max_pct: self.opt_joule_max, torque_keep: self.opt_torque_keep }));
                         }
                     }
                 } else if ui.button(format!("⏹ {}", t("Arrêter"))).clicked()
@@ -423,6 +444,9 @@ impl App {
                     && ui.add(egui::Button::new(RichText::new(format!("⚖ {}", t("Comparer les solutions"))).strong().color(Color32::WHITE)).fill(Color32::from_rgb(0, 120, 90))).on_hover_text(t("Original et propositions recalculés en calcul complet, métriques et graphiques côte à côte, puis choix de la solution")).clicked()
                 {
                     self.cmpia_start();
+                }
+                if ui.button(format!("🕘 {}", t("Historique des comparaisons"))).clicked() {
+                    self.cmpia.open = true;
                 }
                 if ui.button(format!("🖥 {}", t("Console du moteur I.A"))).clicked() {
                     self.console.open = true;

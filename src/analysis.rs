@@ -629,11 +629,29 @@ pub fn ripple_quick(model: &Model, em: &EmfCurve, n: usize) -> (f64, f64) {
     }
     let law = current_law(model, em);
     let g = model.spec.load.angle_deg.to_radians();
+    // couple moyen exact par la puissance électromagnétique : −⟨Σ i·e⟩ / ω
+    // (courants alignés sur −e, convention moteur ; une moyenne sur peu de
+    // positions est faussée quand l'ondulation est forte)
+    let w = model.spec.rpm * 2.0 * PI / 60.0;
+    let ne = em.emf[0].len();
+    let avg = if w > 0.0 && ne > 0 {
+        (0..ne)
+            .map(|k| {
+                let th = em.angles_deg[k].to_radians();
+                let i = law(th, g);
+                (0..3).map(|ph| i[ph] * em.emf[ph][k]).sum::<f64>()
+            })
+            .sum::<f64>()
+            / ne as f64
+            / -w
+    } else {
+        0.0
+    };
     let tq: Vec<f64> = crate::par::map(n, |k| {
         let th = 2.0 * PI * k as f64 / n as f64;
         model.torque(&model.solve_i(th, &law(th, g)))
     });
-    let avg = tq.iter().sum::<f64>() / n as f64;
+    let avg = if avg != 0.0 { avg } else { tq.iter().sum::<f64>() / n as f64 };
     let (mn, mx) = tq.iter().fold((f64::MAX, f64::MIN), |(a, b), &v| (a.min(v), b.max(v)));
     (avg, if avg.abs() > 1e-12 { 100.0 * (mx - mn) / avg.abs() } else { 0.0 })
 }

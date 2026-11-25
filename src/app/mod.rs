@@ -281,6 +281,10 @@ pub struct App {
     opt_sat_limit: bool,
     /// amplitude minimale des décalages imposée à l'ajustement [°]
     opt_skew_min: f64,
+    /// pertes Joule au plus : original + x % (None = libres)
+    opt_joule_max: Option<f64>,
+    /// couple moyen au moins : fraction de l'original (None = libre)
+    opt_torque_keep: Option<f64>,
     /// console : moteur I.A et script
     console: console::Console,
     /// démo
@@ -529,6 +533,8 @@ impl App {
             opt_hist: Vec::new(),
             opt_prog: (0, 0),
             opt_sat_limit: false,
+            opt_joule_max: None,
+            opt_torque_keep: None,
             opt_skew_min: if crate::repartition::uses_offsets() { 1.0 } else { 0.0 },
             console: Default::default(),
             cmpia: Default::default(),
@@ -627,7 +633,7 @@ impl App {
             app.opt_base = Some(app.spec.clone());
             app.opt_vars_run = vars.clone();
             app.console_ia_start(&vars);
-            app.opt_job = Some(crate::optimize::run(app.spec.clone(), crate::optimize::Setup { vars, goal: app.opt_goal, budget: app.opt_budget, emf_keep: app.opt_emf_keep, sat_limit: app.opt_sat_limit, skew_min: app.opt_skew_min }));
+            app.opt_job = Some(crate::optimize::run(app.spec.clone(), crate::optimize::Setup { vars, goal: app.opt_goal, budget: app.opt_budget, emf_keep: app.opt_emf_keep, sat_limit: app.opt_sat_limit, skew_min: app.opt_skew_min, joule_max_pct: app.opt_joule_max, torque_keep: app.opt_torque_keep }));
         }
         if std::env::var("FRACTLAB_SWEEP").is_ok() {
             app.start_sweep();

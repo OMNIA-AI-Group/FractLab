@@ -153,6 +153,10 @@ pub struct Setup {
     /// Amplitude minimale des décalages [°] quand elle est un réglage libre :
     /// empêche l'ajustement de revenir à un rotor régulier.
     pub skew_min: f64,
+    /// Pertes Joule au plus : original × (1 + x/100) ; `None` = libres.
+    pub joule_max_pct: Option<f64>,
+    /// Couple moyen en charge au moins : fraction de l'original ; `None` = libre.
+    pub torque_keep: Option<f64>,
 }
 
 impl Setup {
@@ -192,6 +196,9 @@ pub struct Candidate {
     /// Entropie spectrale du couple de détente.
     #[serde(default)]
     pub entropy: f64,
+    /// Pertes Joule au courant de la spécification [W].
+    #[serde(default)]
+    pub joule_w: f64,
     /// Couple moyen en charge [N·m].
     pub torque_nm: f64,
     /// Ondulation de couple en charge [%].
@@ -241,6 +248,8 @@ pub enum Violation {
     EmfLow,
     /// Couple moyen en charge sous le seuil conservé.
     TorqueLow,
+    /// Pertes Joule au-dessus du seuil.
+    JouleHigh,
 }
 
 impl Violation {
@@ -252,6 +261,7 @@ impl Violation {
             Violation::Unbalance => "balourd au-dessus du seuil",
             Violation::EmfLow => "FEM sous le seuil",
             Violation::TorqueLow => "couple moyen sous le seuil",
+            Violation::JouleHigh => "pertes Joule au-dessus du seuil",
         }
     }
 }
@@ -348,6 +358,7 @@ struct Ref {
     torque: f64,
     ripple: f64,
     share: f64,
+    joule: f64,
     b_knee: f64,
 }
 
@@ -370,6 +381,7 @@ fn measure(s: &MotorSpec, values: Vec<f64>) -> Result<Candidate, String> {
         min_gap_deg: gap,
         b_rotor_t: b_rotor,
         rotor_yoke_mm: s.rotor_yoke_th,
+        joule_w: 1.5 * analysis::phase_resistance(&m) * s.load.i_peak * s.load.i_peak,
         dominant_share_pct: cg.metrics.dominant_share_pct,
         entropy: cg.metrics.spectral_entropy,
         torque_nm: tq,
@@ -384,7 +396,7 @@ fn evaluate(base: &MotorSpec, st: &Setup, x: &[f64], r: &Ref) -> (Candidate, Vec
         lo + u.clamp(0.0, 1.0) * (hi - lo)
     }).collect();
     let s = apply(base, &st.vars, &values);
-    let bad = Candidate { values: values.clone(), score: 1e9, cogging_mnm: 0.0, force_n: 0.0, emf_v: 0.0, min_gap_deg: 0.0, b_rotor_t: 0.0, rotor_yoke_mm: 0.0, dominant_share_pct: 0.0, entropy: 0.0, torque_nm: 0.0, ripple_pct: 0.0, feasible: false };
+    let bad = Candidate { values: values.clone(), score: 1e9, cogging_mnm: 0.0, force_n: 0.0, emf_v: 0.0, min_gap_deg: 0.0, b_rotor_t: 0.0, rotor_yoke_mm: 0.0, dominant_share_pct: 0.0, entropy: 0.0, joule_w: 0.0, torque_nm: 0.0, ripple_pct: 0.0, feasible: false };
     if s.geometry_problem().is_some() {
         return (bad, vec![Violation::Invalid]);
     }
@@ -419,9 +431,18 @@ fn evaluate(base: &MotorSpec, st: &Setup, x: &[f64], r: &Ref) -> (Candidate, Vec
         pen += 5.0 * (st.emf_keep * r.emf - e) / r.emf.max(1e-9);
         viol.push(Violation::EmfLow);
     }
-    if st.goal == Goal::MinRipple && c.torque_nm < st.emf_keep * r.torque {
-        pen += 5.0 * (st.emf_keep * r.torque - c.torque_nm) / r.torque.abs().max(1e-9);
+    let keep = st.torque_keep.or((st.goal == Goal::MinRipple).then_some(st.emf_keep));
+    if let Some(k) = keep
+        && c.torque_nm < k * r.torque
+    {
+        pen += 5.0 * (k * r.torque - c.torque_nm) / r.torque.abs().max(1e-9);
         viol.push(Violation::TorqueLow);
+    }
+    if let Some(x) = st.joule_max_pct
+        && c.joule_w > r.joule * (1.0 + x / 100.0)
+    {
+        pen += 2.0 * (c.joule_w / (r.joule * (1.0 + x / 100.0)).max(1e-12) - 1.0);
+        viol.push(Violation::JouleHigh);
     }
     if st.sat_limit && c.b_rotor_t > r.b_knee {
         // même flux, culasse plus épaisse : B ∝ 1 / épaisseur
@@ -446,7 +467,7 @@ pub fn execute(base: MotorSpec, st: Setup, stop: &AtomicBool, send: &mut dyn FnM
             return;
         }
     };
-    let r = Ref { cog: c0.cogging_mnm, force: c0.force_n, emf: c0.emf_v, torque: c0.torque_nm, ripple: c0.ripple_pct, share: c0.dominant_share_pct, b_knee: base.saturation.rotor.knee() };
+    let r = Ref { cog: c0.cogging_mnm, force: c0.force_n, emf: c0.emf_v, torque: c0.torque_nm, ripple: c0.ripple_pct, share: c0.dominant_share_pct, joule: c0.joule_w, b_knee: base.saturation.rotor.knee() };
     send(OptMsg::Event(Event::Reference(c0)));
     let x0: Vec<f64> = st.vars.iter().map(|v| {
         let (lo, hi) = st.bounds(*v, &base);
@@ -608,7 +629,7 @@ mod tests {
     #[test]
     fn ajustement_reduit_le_cogging_sans_chevauchement() {
         let base = MotorSpec::irregular_example();
-        let st = Setup { vars: vec![Var::ArcRatio, Var::SlotOpen], goal: Goal::MinCogging, budget: 40, emf_keep: 0.85, sat_limit: false, skew_min: 0.0 };
+        let st = Setup { vars: vec![Var::ArcRatio, Var::SlotOpen], goal: Goal::MinCogging, budget: 40, emf_keep: 0.85, sat_limit: false, skew_min: 0.0, joule_max_pct: None, torque_keep: None };
         let job = run(base.clone(), st);
         let mut best = None;
         while let Ok(m) = job.rx.recv() {

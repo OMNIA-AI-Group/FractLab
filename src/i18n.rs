@@ -984,6 +984,19 @@ pub static TABLE: &[(&str, &str, &str, &str)] = &[
     ("Force sur le rotor", "Force on the rotor", "Fuerza sobre el rotor", "Kraft auf den Rotor"),
     ("Profil normalisé (original = 100 %)", "Normalised profile (original = 100 %)", "Perfil normalizado (original = 100 %)", "Normiertes Profil (Original = 100 %)"),
     ("% de l'original", "% of original", "% del original", "% des Originals"),
+    // contraintes et historique des comparaisons
+    ("Historique", "History", "Historial", "Verlauf"),
+    ("original gardé", "original kept", "original conservado", "Original behalten"),
+    ("choix :", "choice:", "elección:", "Wahl:"),
+    ("comparaison en cours", "current comparison", "comparación en curso", "aktueller Vergleich"),
+    ("Retirer de l'historique", "Remove from history", "Quitar del historial", "Aus dem Verlauf entfernen"),
+    ("Recalculer les courbes", "Recompute the curves", "Recalcular las curvas", "Kurven neu berechnen"),
+    ("L'historique garde le tableau et le profil ; les courbes se recalculent à la demande.", "History keeps the table and the profile; curves are recomputed on demand.", "El historial guarda la tabla y el perfil; las curvas se recalculan a petición.", "Der Verlauf speichert Tabelle und Profil; die Kurven werden bei Bedarf neu berechnet."),
+    ("Historique des comparaisons", "Comparison history", "Historial de comparaciones", "Vergleichsverlauf"),
+    ("Pertes Joule ≤ original +", "Copper losses ≤ original +", "Pérdidas Joule ≤ original +", "Kupferverluste ≤ Original +"),
+    ("Couple moyen ≥", "Mean torque ≥", "Par medio ≥", "Mittleres Moment ≥"),
+    ("de l'original", "of the original", "del original", "des Originals"),
+    ("pertes Joule au-dessus du seuil", "copper losses above the limit", "pérdidas Joule por encima del umbral", "Kupferverluste über der Grenze"),
 ];
 
 #[cfg(test)]

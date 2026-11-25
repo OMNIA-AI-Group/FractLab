@@ -230,7 +230,7 @@ pub fn trial_line(t: &Trial, vars: &[Var]) -> String {
     if c.torque_nm != 0.0 {
         l += &format!("  {} {:.1} %", tr("ond."), c.ripple_pct);
     }
-    l += &format!("  dom. {:.1} %  H {:.3}", c.dominant_share_pct, c.entropy);
+    l += &format!("  dom. {:.1} %  H {:.3}  C {} N·m  PJ {} W", c.dominant_share_pct, c.entropy, fmt(c.torque_nm), fmt(c.joule_w));
     if !t.violations.is_empty() {
         let v: Vec<&str> = t.violations.iter().map(|v| tr(v.name())).collect();
         l += &format!("  ✖ {}", v.join(", "));
@@ -414,12 +414,14 @@ fn cmd(c: &mut Ctx, line: &str, out: &mut dyn FnMut(Kind, String), spec_out: &mu
             let goal = goal_of(&arg(1)?.to_lowercase()).ok_or_else(|| format!("{} : {} (cogging, force, fem, compromis, ondulation, etale, entropie, etale_faible)", tr("objectif inconnu"), words[1]))?;
             let budget = words.get(2).and_then(|w| w.parse::<usize>().ok()).unwrap_or(120).clamp(10, 5000);
             let vars: Vec<Var> = match words.get(3) {
-                Some(w) if *w != "sat" && !w.starts_with("amin=") => w.split(',').map(|x| var_of(&pname(x)).ok_or_else(|| format!("{} : {x}", tr("variable inconnue")))).collect::<Result<_, _>>()?,
+                Some(w) if *w != "sat" && !w.contains('=') => w.split(',').map(|x| var_of(&pname(x)).ok_or_else(|| format!("{} : {x}", tr("variable inconnue")))).collect::<Result<_, _>>()?,
                 _ => vec![Var::ArcRatio, Var::SkewAmp],
             };
             let sat_limit = words.iter().any(|w| *w == "sat");
             let skew_min = words.iter().find_map(|w| w.strip_prefix("amin=").and_then(num)).unwrap_or(0.0);
-            let setup = optimize::Setup { vars: vars.clone(), goal, budget, emf_keep: 0.9, sat_limit, skew_min };
+            let joule_max_pct = words.iter().find_map(|w| w.strip_prefix("joule=").and_then(num));
+            let torque_keep = words.iter().find_map(|w| w.strip_prefix("couple=").and_then(num));
+            let setup = optimize::Setup { vars: vars.clone(), goal, budget, emf_keep: 0.9, sat_limit, skew_min, joule_max_pct, torque_keep };
             out(Kind::Info, format!("{} : {} · {budget} {} · {}", tr("Ajustement I.A"), tr(goal.name()), tr("essais"), vars.iter().map(|v| short_of(*v)).collect::<Vec<_>>().join(", ")));
             let mut best: Option<optimize::Candidate> = None;
             optimize::execute(c.spec.clone(), setup, c.stop, &mut |m| match m {
