@@ -3,6 +3,20 @@
 Format : une section par version, la plus récente en premier.
 *English summary at the end of each section.*
 
+## Prochaine version (en préparation)
+
+- **Ajustement I.A** : amplitude minimale des décalages réglable quand
+  l'amplitude est un réglage libre (empêche l'ajustement de revenir à un
+  rotor régulier) ; commande de script `ia … amin=2`.
+- **Inductance** : banc `examples/inductance_fv.rs` (modèle analytique
+  contre volumes finis, tranche par tranche) ; accord à moins de 1 %, avec
+  ou sans becs de dents. Le modèle à encoches ouvertes de SIMUMSAP surestime
+  l'inductance d'environ 20 % sur des encoches larges (voir docs/MODELE.md).
+
+*English — Minimum offset amplitude for A.I. tuning; inductance checked
+against finite volumes (< 1 %); SIMUMSAP's open-slot model overestimates
+inductance by about 20 % on wide slots.*
+
 ## 0.1.8 — console du moteur I.A, graphe 3D des essais, démo
 
 - **Graphe 3D des possibilités explorées** (console, onglet Moteur I.A) :

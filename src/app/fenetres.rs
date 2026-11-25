@@ -375,6 +375,10 @@ impl App {
                     lbl(ui, t("FEM conservée ≥"));
                     ui.add(egui::DragValue::new(&mut self.opt_emf_keep).clamp_range(0.5..=1.0).speed(0.01).max_decimals(2));
                     chk(ui, &mut self.opt_sat_limit, t("Culasse rotor non saturée"));
+                    if crate::repartition::uses_offsets() && self.opt_vars.iter().any(|(v, on)| *on && *v == op::Var::SkewAmp) {
+                        lbl(ui, t("Amplitude des décalages ≥"));
+                        ui.add(egui::DragValue::new(&mut self.opt_skew_min).clamp_range(0.0..=8.0).speed(0.05).max_decimals(2).suffix(" °"));
+                    }
                 });
                 ui.horizontal_wrapped(|ui| {
                     lbl(ui, t("Réglages libres :"));
@@ -394,7 +398,7 @@ impl App {
                             self.opt_top.clear();
                             self.opt_hist.clear();
                             self.console_ia_start(&vars);
-                            self.opt_job = Some(op::run(self.spec.clone(), op::Setup { vars, goal: self.opt_goal, budget: self.opt_budget, emf_keep: self.opt_emf_keep, sat_limit: self.opt_sat_limit }));
+                            self.opt_job = Some(op::run(self.spec.clone(), op::Setup { vars, goal: self.opt_goal, budget: self.opt_budget, emf_keep: self.opt_emf_keep, sat_limit: self.opt_sat_limit, skew_min: self.opt_skew_min }));
                         }
                     }
                 } else if ui.button(format!("⏹ {}", t("Arrêter"))).clicked()

@@ -235,7 +235,7 @@ impl App {
                     self.opt_top.clear();
                     self.opt_hist.clear();
                     self.console_ia_start(&vars);
-                    self.opt_job = Some(crate::optimize::run(self.spec.clone(), crate::optimize::Setup { vars, goal: crate::optimize::Goal::MinCogging, budget: 60, emf_keep: 0.9, sat_limit: false }));
+                    self.opt_job = Some(crate::optimize::run(self.spec.clone(), crate::optimize::Setup { vars, goal: crate::optimize::Goal::MinCogging, budget: 60, emf_keep: 0.9, sat_limit: false, skew_min: 0.0 }));
                 }
                 next = dt > 2.0 && self.opt_job.is_none() && dt > 6.0;
                 if dt > 90.0 {

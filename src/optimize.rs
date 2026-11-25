@@ -141,6 +141,21 @@ pub struct Setup {
     /// (fer idéal), seulement sa propre induction : ce n'est donc pas une
     /// variable de l'optimisation mais une conséquence de chaque essai.
     pub sat_limit: bool,
+    /// Amplitude minimale des décalages [°] quand elle est un réglage libre :
+    /// empêche l'ajustement de revenir à un rotor régulier.
+    pub skew_min: f64,
+}
+
+impl Setup {
+    /// Bornes d'une variable pour cet ajustement.
+    pub fn bounds(&self, v: Var, s: &MotorSpec) -> (f64, f64) {
+        let (lo, hi) = v.bounds(s);
+        if v == Var::SkewAmp && self.skew_min > 0.0 {
+            (lo.max(self.skew_min), hi.max(self.skew_min + 0.5))
+        } else {
+            (lo, hi)
+        }
+    }
 }
 
 /// Une proposition évaluée.
@@ -347,7 +362,7 @@ fn measure(s: &MotorSpec, values: Vec<f64>) -> Result<Candidate, String> {
 
 fn evaluate(base: &MotorSpec, st: &Setup, x: &[f64], r: &Ref) -> (Candidate, Vec<Violation>) {
     let values: Vec<f64> = st.vars.iter().zip(x).map(|(v, u)| {
-        let (lo, hi) = v.bounds(base);
+        let (lo, hi) = st.bounds(*v, base);
         lo + u.clamp(0.0, 1.0) * (hi - lo)
     }).collect();
     let s = apply(base, &st.vars, &values);
@@ -413,10 +428,10 @@ pub fn execute(base: MotorSpec, st: Setup, stop: &AtomicBool, send: &mut dyn FnM
     let r = Ref { cog: c0.cogging_mnm, force: c0.force_n, emf: c0.emf_v, torque: c0.torque_nm, ripple: c0.ripple_pct, b_knee: base.saturation.rotor.knee() };
     send(OptMsg::Event(Event::Reference(c0)));
     let x0: Vec<f64> = st.vars.iter().map(|v| {
-        let (lo, hi) = v.bounds(&base);
+        let (lo, hi) = st.bounds(*v, &base);
         ((v.get(&base) - lo) / (hi - lo).max(1e-12)).clamp(0.0, 1.0)
     }).collect();
-    let real = |x: &[f64]| -> Vec<f64> { st.vars.iter().zip(x).map(|(v, u)| { let (lo, hi) = v.bounds(&base); lo + u * (hi - lo) }).collect() };
+    let real = |x: &[f64]| -> Vec<f64> { st.vars.iter().zip(x).map(|(v, u)| { let (lo, hi) = st.bounds(*v, &base); lo + u * (hi - lo) }).collect() };
     let mut all: Vec<Candidate> = Vec::new();
     let mut hist: Vec<f64> = Vec::new();
     let mut trace: Vec<Trial> = Vec::new();
@@ -437,7 +452,7 @@ pub fn execute(base: MotorSpec, st: Setup, stop: &AtomicBool, send: &mut dyn FnM
         for c in v {
             // solutions distinctes : écart normalisé > 3 %
             let distinct = out.iter().all(|o| o.values.iter().zip(&c.values).zip(&st.vars).any(|((a, b), var)| {
-                let (lo, hi) = var.bounds(&base);
+                let (lo, hi) = st.bounds(*var, &base);
                 (a - b).abs() / (hi - lo).max(1e-12) > 0.03
             }));
             if distinct {
@@ -572,7 +587,7 @@ mod tests {
     #[test]
     fn ajustement_reduit_le_cogging_sans_chevauchement() {
         let base = MotorSpec::irregular_example();
-        let st = Setup { vars: vec![Var::ArcRatio, Var::SlotOpen], goal: Goal::MinCogging, budget: 40, emf_keep: 0.85, sat_limit: false };
+        let st = Setup { vars: vec![Var::ArcRatio, Var::SlotOpen], goal: Goal::MinCogging, budget: 40, emf_keep: 0.85, sat_limit: false, skew_min: 0.0 };
         let job = run(base.clone(), st);
         let mut best = None;
         while let Ok(m) = job.rx.recv() {

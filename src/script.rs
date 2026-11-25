@@ -408,11 +408,12 @@ fn cmd(c: &mut Ctx, line: &str, out: &mut dyn FnMut(Kind, String), spec_out: &mu
             let goal = goal_of(&arg(1)?.to_lowercase()).ok_or_else(|| format!("{} : {} (cogging, force, fem, compromis, ondulation)", tr("objectif inconnu"), words[1]))?;
             let budget = words.get(2).and_then(|w| w.parse::<usize>().ok()).unwrap_or(120).clamp(10, 5000);
             let vars: Vec<Var> = match words.get(3) {
-                Some(w) if *w != "sat" => w.split(',').map(|x| var_of(&pname(x)).ok_or_else(|| format!("{} : {x}", tr("variable inconnue")))).collect::<Result<_, _>>()?,
+                Some(w) if *w != "sat" && !w.starts_with("amin=") => w.split(',').map(|x| var_of(&pname(x)).ok_or_else(|| format!("{} : {x}", tr("variable inconnue")))).collect::<Result<_, _>>()?,
                 _ => vec![Var::ArcRatio, Var::SkewAmp],
             };
             let sat_limit = words.iter().any(|w| *w == "sat");
-            let setup = optimize::Setup { vars: vars.clone(), goal, budget, emf_keep: 0.9, sat_limit };
+            let skew_min = words.iter().find_map(|w| w.strip_prefix("amin=").and_then(num)).unwrap_or(0.0);
+            let setup = optimize::Setup { vars: vars.clone(), goal, budget, emf_keep: 0.9, sat_limit, skew_min };
             out(Kind::Info, format!("{} : {} · {budget} {} · {}", tr("Ajustement I.A"), tr(goal.name()), tr("essais"), vars.iter().map(|v| short_of(*v)).collect::<Vec<_>>().join(", ")));
             let mut best: Option<optimize::Candidate> = None;
             optimize::execute(c.spec.clone(), setup, c.stop, &mut |m| match m {
@@ -460,7 +461,7 @@ const HELP: [&str; 13] = [
     "inductance — matrice d'inductances du dernier calcul",
     "balaye arc 0,6 0,9 7 — étude paramétrique",
     "compare — toutes les variantes avec les réglages du projet",
-    "ia cogging 120 arc,amplitude [sat] — Ajustement I.A (cogging, force, fem, compromis, ondulation)",
+    "ia cogging 120 arc,amplitude [sat] [amin=2] — Ajustement I.A (cogging, force, fem, compromis, ondulation)",
     "applique — reporte le projet du script dans l'interface",
     "initial — revient au projet de départ du script",
     "# … — commentaire",

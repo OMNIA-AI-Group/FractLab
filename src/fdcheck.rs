@@ -64,6 +64,8 @@ pub struct FdModel {
     stator_below: bool,
     /// densité de courant par cellule [A/m²]
     cell_j: Vec<f64>,
+    /// encoche de chaque cellule du corps d'encoche (−1 ailleurs)
+    slot_of: Vec<i32>,
 }
 
 fn graded(a: f64, b: f64, n: usize, ratio: f64, fine_at_b: bool) -> Vec<f64> {
@@ -137,6 +139,7 @@ impl FdModel {
         let zone: Vec<u8> = zone_of_layer.iter().map(|&z| if z == 3 { 0 } else { z }).collect();
         let mut iron = vec![false; nt * nr];
         let mut cell_j = vec![0.0; nt * nr];
+        let mut slot_of = vec![-1i32; nt * nr];
         for j in 0..nt {
             let th = (j as f64 + 0.5) * dth;
             for i in 0..nr {
@@ -154,7 +157,10 @@ impl FdModel {
                 }
                 match inside {
                     None => iron[j * nr + i] = true,
-                    Some(k) if z == 0 => cell_j[j * nr + i] = j_slots.get(k).copied().unwrap_or(0.0),
+                    Some(k) if z == 0 => {
+                        cell_j[j * nr + i] = j_slots.get(k).copied().unwrap_or(0.0);
+                        slot_of[j * nr + i] = k as i32;
+                    }
                     _ => {}
                 }
             }
@@ -176,6 +182,7 @@ impl FdModel {
             length: ge.depth,
             stator_below: below,
             cell_j,
+            slot_of,
         };
         let (diag, off_r, off_t) = m.coeffs();
         m.chol = BandChol::factor_nonperiodic(m.g.nt, m.g.rc.len(), &diag, &off_r, &off_t);
@@ -224,6 +231,7 @@ impl FdModel {
             length: spec.length(),
             stator_below: true,
             cell_j: vec![0.0; nt * nr0],
+            slot_of: vec![-1; nt * nr0],
             spec,
             g,
             pieces,
@@ -349,6 +357,21 @@ impl FdModel {
         }
         let (diag, off_r, off_t) = self.coeffs();
         pcg(nt, nr, &diag, &off_r, &off_t, &b, &self.chol)
+    }
+
+    /// Potentiel moyen [Wb/m] sur le corps de l'encoche `k` (moyenne pondérée
+    /// par l'aire des cellules), pour le calcul des flux de bobines.
+    pub fn slot_mean_a(&self, a: &[f64], k: usize) -> f64 {
+        let nr = self.g.rc.len();
+        let (mut num, mut den) = (0.0, 0.0);
+        for (p, &s) in self.slot_of.iter().enumerate() {
+            if s == k as i32 {
+                let w = self.g.area(p % nr);
+                num += a[p] * w;
+                den += w;
+            }
+        }
+        if den > 0.0 { num / den } else { 0.0 }
     }
 
     /// Couple sur le rotor [N·m], moyenne sur les faces internes de l'entrefer.

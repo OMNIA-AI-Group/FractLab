@@ -87,6 +87,22 @@ est remplacé par le rayon moyen de la tranche.
 | Tranche plane de machine axiale (à vide) | 1,07 % | 0,09 % |
 | Tranche plane de machine axiale (en charge) | 0,42 % | 0,08 % |
 
+### Inductance
+
+L'inductance propre est contrôlée par le même solveur volumes finis
+(`examples/inductance_fv.rs`, tranche par tranche, aimants éteints) sur une
+machine axiale multi-tranches : 0,6 % d'écart avec des encoches ouvertes, et
+0,9 % avec des becs de dents une fois la grille raffinée (l'écart de contrôle
+passe de 4,6 % à 0,9 % en raffinant ; le modèle analytique, lui, ne bouge
+plus).
+
+Comparaison avec SIMUMSAP : son modèle de machine axiale à encoches ouvertes
+remplace le champ dans l'encoche par une nappe de courant équivalente à
+l'ouverture. Sur des encoches larges, il surestime l'inductance d'environ
+20 % par rapport au champ 2D exact (FractLab et volumes finis concordent) ;
+avec les vrais becs de dents, l'inductance réelle est d'ailleurs bien plus
+élevée que celle de l'hypothèse d'encoches ouvertes.
+
 ## Limites
 
 - éléments finis non linéaires non couverts (la saturation est estimée par

@@ -278,6 +278,8 @@ pub struct App {
     opt_prog: (usize, usize),
     /// interdire la saturation de la culasse du rotor pendant l'ajustement
     opt_sat_limit: bool,
+    /// amplitude minimale des décalages imposée à l'ajustement [°]
+    opt_skew_min: f64,
     /// console : moteur I.A et script
     console: console::Console,
     /// démo
@@ -524,6 +526,7 @@ impl App {
             opt_hist: Vec::new(),
             opt_prog: (0, 0),
             opt_sat_limit: false,
+            opt_skew_min: if crate::repartition::uses_offsets() { 1.0 } else { 0.0 },
             console: Default::default(),
             demo: demo::DemoState {
                 pending: std::env::var("FRACTLAB_DEMO").ok().and_then(|k| crate::demo::MOTORS.iter().find(|m| m.key == k).map(|m| m.key)),
@@ -620,7 +623,7 @@ impl App {
             app.opt_base = Some(app.spec.clone());
             app.opt_vars_run = vars.clone();
             app.console_ia_start(&vars);
-            app.opt_job = Some(crate::optimize::run(app.spec.clone(), crate::optimize::Setup { vars, goal: app.opt_goal, budget: app.opt_budget, emf_keep: app.opt_emf_keep, sat_limit: app.opt_sat_limit }));
+            app.opt_job = Some(crate::optimize::run(app.spec.clone(), crate::optimize::Setup { vars, goal: app.opt_goal, budget: app.opt_budget, emf_keep: app.opt_emf_keep, sat_limit: app.opt_sat_limit, skew_min: app.opt_skew_min }));
         }
         if std::env::var("FRACTLAB_SWEEP").is_ok() {
             app.start_sweep();
