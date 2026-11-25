@@ -1,0 +1,16 @@
+# Dépôt « liste blanche » : seules les sources sont publiées.
+# Binaires et installateurs restent en local (ils vont dans les GitHub Releases).
+/*
+!/.gitignore
+!/README*.md
+!/CHANGELOG.md
+!/LICENSE
+!/Cargo.toml
+!/Cargo.lock
+!/build.rs
+!/src/
+!/examples/
+!/assets/
+!/docs/
+!/packaging/
+/packaging/windows/winstage/

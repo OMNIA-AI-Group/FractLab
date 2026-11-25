@@ -1,0 +1,35 @@
+//! FractLab — outil d'analyse des machines à aimants permanents (ΩiA-Group).
+#![warn(missing_docs)]
+pub mod geometry;
+pub mod demo;
+pub mod repartition;
+pub mod linalg;
+pub mod magnets;
+pub mod subdomain;
+pub mod legacy;
+pub mod fdcheck;
+pub mod winding;
+pub mod analysis;
+pub mod compute;
+pub mod view3d;
+pub mod app;
+pub mod i18n;
+pub mod units;
+pub mod exchange;
+pub mod help;
+pub mod dynamics;
+pub mod matfile;
+pub mod section;
+pub mod par;
+pub mod sweep;
+pub mod saturation;
+pub mod recalage;
+pub mod tips;
+pub mod platform;
+pub mod bg;
+#[cfg(target_arch = "wasm32")]
+pub mod web;
+pub mod optimize;
+pub mod script;
+pub mod dynsim;
+pub mod doc;

@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=FractLab
+GenericName=Magnetic Engine Simulator
+GenericName[fr]=Simulateur de moteurs à aimants
+Comment=Analyse des machines à aimants permanents
+Comment[en]=Permanent-magnet machine analysis
+Comment[es]=Análisis de máquinas de imanes permanentes
+Comment[de]=Analyse von Permanentmagnetmaschinen
+Exec=fractlab
+Icon=fractlab
+Categories=Science;Engineering;Physics;
+Keywords=moteur;motor;aimant;magnet;cogging;FEMM;
+Terminal=false

@@ -1,0 +1,41 @@
+[package]
+name = "fractlab"
+version = "0.1.8"
+edition = "2024"
+description = "FractLab — simulateur analytique de moteurs à aimants permanents, pour toute répartition des aimants"
+authors = ["Alain VALETTE-CLARY (ΩiA-Group)"]
+license = "GPL-3.0-or-later"
+readme = "README.md"
+keywords = ["moteur", "aimants", "electromagnetisme", "cogging", "simulation"]
+categories = ["science", "simulation"]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+bincode = "1.3"
+web-time = "0.2"
+dirs = "7.0.0"
+eframe = { version = "0.27", default-features = false, features = ["glow", "default_fonts", "wayland", "x11"] }
+egui_plot = { version = "0.27", default-features = false }
+flate2 = "1.1.11"
+image = { version = "0.25", default-features = false, features = ["jpeg", "png"] }
+rfd = "0.14"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+
+# version navigateur (WebAssembly)
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+js-sys = "0.3"
+web-sys = { version = "0.3", features = ["Window", "Document", "Element", "HtmlCanvasElement", "HtmlAnchorElement", "HtmlAudioElement", "HtmlElement", "Blob", "BlobPropertyBag", "Url", "Worker", "WorkerOptions", "WorkerType", "MessageEvent", "DedicatedWorkerGlobalScope", "Storage", "Location", "CssStyleDeclaration", "Navigator"] }
+
+[build-dependencies]
+embed-resource = "3"
+
+[profile.release]
+opt-level = 3
+
+[profile.test]
+opt-level = 3
